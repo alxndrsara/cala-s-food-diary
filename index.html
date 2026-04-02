@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Calorie Chat</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div>
+        <h1>🍱Cala's Food Diary</h1>
+        <p>Conversational calorie & macro tracker, powered by AI</p>
+      </div>
+    </header>
+
+    <nav class="top-nav">
+      <button class="nav-btn active" data-screen="chat">💬 Chat</button>
+      <button class="nav-btn" data-screen="logs">📜 Logs</button>
+      <button class="nav-btn" data-screen="analytics">📊 Analytics</button>
+    </nav>
+
+    <!-- CHAT SCREEN -->
+    <main id="screen-chat" class="screen active">
+      <div class="main-grid">
+        <section class="card chat-card">
+          <div class="card-header">
+            <h2>Log Meal</h2>
+            <span class="badge">GPT 4o Mini</span>
+          </div>
+
+          <div id="chat-box" class="chat-box"></div>
+
+          <textarea
+            id="user-input"
+            placeholder="Contoh: hari ini aku makan nasi padang ayam bakar, sambal sedikit, daun singkong, dan teh manis"
+          ></textarea>
+
+          <div class="actions">
+            <button id="send-btn" class="btn btn-primary">Send</button>
+            <button id="save-btn" class="btn btn-success">Log Meal</button>
+            <button id="reset-btn" class="btn btn-danger-soft">Clear</button>
+          </div>
+        </section>
+
+        <section class="card draft-card">
+          <div class="card-header">
+            <h2>Log Preview</h2>
+            <span class="badge soft">Ready to Save</span>
+          </div>
+
+          <div class="meta-fields">
+            <label>
+              Date
+              <input type="date" id="log-date" />
+            </label>
+
+            <label>
+              Time
+              <input type="time" id="log-time" />
+            </label>
+
+            <label>
+              Meal Name
+              <input
+                type="text"
+                id="meal-name"
+                placeholder="Contoh: makan malam, ngemil sore, lunch"
+              />
+            </label>
+          </div>
+
+          <div id="draft-empty" class="draft-empty">
+            Data is currently empty
+          </div>
+
+          <div id="draft-pretty" class="draft-pretty hidden">
+            <div class="draft-section">
+              <h3>Items</h3>
+              <div id="draft-items"></div>
+            </div>
+
+            <div class="draft-section total-box">
+              <h3>Total</h3>
+              <div class="total-grid">
+                <div class="total-pill">
+                  <span>Calories</span>
+                  <strong id="total-calories">0</strong>
+                </div>
+                <div class="total-pill">
+                  <span>Protein</span>
+                  <strong id="total-protein">0 g</strong>
+                </div>
+                <div class="total-pill">
+                  <span>Carbs</span>
+                  <strong id="total-carbs">0 g</strong>
+                </div>
+                <div class="total-pill">
+                  <span>Fat</span>
+                  <strong id="total-fat">0 g</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <details class="raw-json-box">
+            <summary>Show raw JSON</summary>
+            <pre id="draft-output" class="draft-output">Data is currently empty</pre>
+          </details>
+        </section>
+      </div>
+    </main>
+
+    <!-- LOGS SCREEN -->
+    <main id="screen-logs" class="screen">
+      <section class="card">
+        <div class="card-header">
+          <h2>Food Logs</h2>
+          <button id="refresh-logs-btn" class="btn btn-primary">Refresh Logs</button>
+        </div>
+
+        <div class="filter-row">
+          <label>
+            Filter Date
+            <input type="date" id="logs-filter-date" />
+          </label>
+        </div>
+
+        <div id="logs-container" class="logs-container">
+          <div class="draft-empty">Belum ada data logs.</div>
+        </div>
+      </section>
+    </main>
+
+    <!-- ANALYTICS SCREEN -->
+    <main id="screen-analytics" class="screen">
+      <section class="card">
+        <div class="card-header">
+          <h2>Analytics</h2>
+          <button id="refresh-analytics-btn" class="btn btn-primary">Refresh Analytics</button>
+        </div>
+
+        <div class="analytics-grid">
+  <div class="summary-card">
+    <h3>Today Calories</h3>
+    <p id="analytics-today-calories">-</p>
+    <small id="analytics-calories-remaining">-</small>
+  </div>
+  <div class="summary-card">
+    <h3>Today Protein</h3>
+    <p id="analytics-today-protein">-</p>
+    <small id="analytics-protein-remaining">-</small>
+  </div>
+  <div class="summary-card">
+    <h3>Today Carbs</h3>
+    <p id="analytics-today-carbs">-</p>
+    <small id="analytics-carbs-remaining">-</small>
+  </div>
+  <div class="summary-card">
+    <h3>Today Fat</h3>
+    <p id="analytics-today-fat">-</p>
+    <small id="analytics-fat-remaining">-</small>
+  </div>
+
+  <div class="draft-section">
+  <h3>Calories Trend</h3>
+  <canvas id="calories-chart" height="120"></canvas>
+</div>
+
+<div class="draft-section">
+  <h3>Macros Trend</h3>
+  <canvas id="macros-chart" height="120"></canvas>
+</div>
+</div>
+
+        <div class="draft-section">
+          <h3>Recent Daily Summary</h3>
+          <div id="daily-summary-container" class="logs-container">
+            <div class="draft-empty">Belum ada daily summary.</div>
+          </div>
+        </div>
+
+        <div class="draft-section">
+          <h3>Monthly Summary</h3>
+          <div id="monthly-summary-container" class="logs-container">
+            <div class="draft-empty">Belum ada monthly summary.</div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="edit-modal" class="modal-overlay hidden">
+  <div class="modal-card">
+    <div class="card-header">
+      <h2>Edit Log</h2>
+      <button id="close-edit-modal" class="btn btn-danger-soft">Close</button>
+    </div>
+
+    <input type="hidden" id="edit-log-id" />
+
+    <label>
+      Food Name
+      <input type="text" id="edit-food-name" />
+    </label>
+
+    <label>
+      Quantity Note
+      <input type="text" id="edit-quantity-note" />
+    </label>
+
+    <label>
+      Calories
+      <input type="number" id="edit-calories" step="0.1" />
+    </label>
+
+    <label>
+      Protein (g)
+      <input type="number" id="edit-protein" step="0.1" />
+    </label>
+
+    <label>
+      Carbs (g)
+      <input type="number" id="edit-carbs" step="0.1" />
+    </label>
+
+    <label>
+      Fat (g)
+      <input type="number" id="edit-fat" step="0.1" />
+    </label>
+
+    <div class="actions">
+      <button id="save-edit-btn" class="btn btn-success">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
