@@ -19,6 +19,26 @@ function formatMealNameFromDateTime(date, time) {
   return `Meal ${date} ${time}`;
 }
 
+function updateDateTime() {
+  const now = new Date();
+
+  const options = {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  };
+
+  const formatted = now.toLocaleString('id-ID', options);
+  document.getElementById('datetime').textContent = formatted;
+}
+
+updateDateTime();
+setInterval(updateDateTime, 1000);
+
+
 function normalizeDate(value) {
   if (!value) return "";
 
