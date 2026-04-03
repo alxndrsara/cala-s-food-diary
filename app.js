@@ -31,7 +31,7 @@ function updateDateTime() {
     minute: '2-digit'
   };
 
-  const formatted = now.toLocaleString('id-ID', options);
+  const formatted = now.toLocaleString('en-GB', options);
   document.getElementById('datetime').textContent = formatted;
 }
 
