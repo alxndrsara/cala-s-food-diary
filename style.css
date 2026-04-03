@@ -229,6 +229,13 @@ textarea {
   color: var(--muted);
 }
 
+#datetime {
+  font-size: 20px;
+  color: #6b5b6b;
+  margin-top: -10px;
+  margin-bottom: 20px;
+}
+
 .draft-empty {
   background: #fff9fc;
   border: 1px dashed var(--border);
