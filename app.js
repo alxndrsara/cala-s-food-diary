@@ -247,6 +247,22 @@ function showToast(message, type = "info") {
   }, 3000);
 }
 
+function setProgressBar(id, value, target) {
+  const el = document.getElementById(id);
+  if (!el) return;
+
+  const safeTarget = Number(target || 0);
+  const safeValue = Number(value || 0);
+
+  if (safeTarget <= 0) {
+    el.style.width = "0%";
+    return;
+  }
+
+  const percent = Math.min((safeValue / safeTarget) * 100, 100);
+  el.style.width = `${percent}%`;
+}
+
 function createManualItemHTML(index) {
   return `
     <div class="manual-item-card" data-manual-item>
@@ -860,6 +876,11 @@ document.getElementById("analytics-carbs-remaining").textContent =
 
 document.getElementById("analytics-fat-remaining").textContent =
   `Remaining: ${(targetFat - todayFat).toFixed(1)} g`;
+
+setProgressBar("progress-calories", todayCalories, targetCalories);
+setProgressBar("progress-protein", todayProtein, targetProtein);
+setProgressBar("progress-carbs", todayCarbs, targetCarbs);
+setProgressBar("progress-fat", todayFat, targetFat);
 
     const recentDaily = [...dailyData].reverse().slice(0, 10);
 
