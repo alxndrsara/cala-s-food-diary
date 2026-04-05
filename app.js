@@ -226,6 +226,27 @@ function extractJson(text) {
   return JSON.parse(jsonString);
 }
 
+function showToast(message, type = "info") {
+  const container = document.getElementById("toast-container");
+  if (!container) return;
+
+  const toast = document.createElement("div");
+  toast.className = `toast ${type}`;
+  toast.textContent = message;
+
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.opacity = "0";
+    toast.style.transform = "translateY(-6px)";
+    toast.style.transition = "0.2s ease";
+  }, 2600);
+
+  setTimeout(() => {
+    toast.remove();
+  }, 3000);
+}
+
 function createManualItemHTML(index) {
   return `
     <div class="manual-item-card" data-manual-item>
@@ -294,7 +315,7 @@ function removeManualItem(button) {
   const allItems = container.querySelectorAll("[data-manual-item]");
 
   if (allItems.length <= 1) {
-    alert("Minimal harus ada 1 item.");
+    alert("At least one item.");
     return;
   }
 
@@ -429,7 +450,7 @@ function generateSessionId() {
 
 async function saveFinal() {
   if (!currentDraft || !currentDraft.items || currentDraft.items.length === 0) {
-    alert("Belum ada draft untuk disimpan.");
+    alert("No draft to save");
     return;
   }
 
@@ -470,7 +491,7 @@ async function saveFinal() {
     console.log("Apps Script save response:", result);
 
     if (result.success) {
-      alert(`Berhasil simpan ${result.inserted} item.`);
+      showToast(`Saved ${result.inserted} item.`, "success");
       resetDraft();
       document.getElementById("meal-name").value = "";
       document.getElementById("log-date").value = formatToday();
@@ -478,11 +499,11 @@ async function saveFinal() {
       await loadLogs();
       await loadAnalytics();
     } else {
-      alert(`Gagal simpan: ${result.error || "Unknown error"}`);
+      showToast(`Failed to save: ${result.error || "Unknown error"}`, "error");
     }
   } catch (error) {
     console.error("SAVE FINAL ERROR:", error);
-    alert(`Gagal simpan ke Google Sheets.\n\n${error.message}`);
+    showToast(`Failed to save to Google Sheets: ${error.message}`, "error");
   }
 }
 
@@ -632,7 +653,7 @@ function closeEditModal() {
 }
 
 async function deleteLog(logId) {
-  const confirmed = confirm("Yakin mau hapus log ini?");
+  const confirmed = confirm("Are you sure to delete this log?");
   if (!confirmed) return;
 
   const payload = {
@@ -652,15 +673,15 @@ async function deleteLog(logId) {
     const result = await response.json();
 
     if (result.success) {
-      alert("Log berhasil dihapus.");
+      showToast("Log deleted.", "success");
       await loadLogs();
       await loadAnalytics();
     } else {
-      alert(`Gagal hapus: ${result.error || "Unknown error"}`);
+      showToast(`Failed to delete: ${result.error || "Unknown error"}`, "error");
     }
   } catch (error) {
     console.error("DELETE LOG ERROR:", error);
-    alert(`Gagal hapus log.\n\n${error.message}`);
+    showToast(`Failed to delete log: ${error.message}`, "error");
   }
 }
 
@@ -688,16 +709,16 @@ async function saveEditedLog() {
     const result = await response.json();
 
     if (result.success) {
-      alert("Log berhasil diupdate.");
+      showToast("Log updated.", "success");
       closeEditModal();
       await loadLogs();
       await loadAnalytics();
     } else {
-      alert(`Gagal update: ${result.error || "Unknown error"}`);
+      showToast(`Failed to update: ${result.error || "Unknown error"}`, "error");
     }
   } catch (error) {
     console.error("UPDATE LOG ERROR:", error);
-    alert(`Gagal update log.\n\n${error.message}`);
+    showToast(`Failed to update log: ${error.message}`, "error");
   }
 }
 
@@ -925,7 +946,7 @@ document.getElementById("save-btn-manual").addEventListener("click", async () =>
   const manualDraft = buildManualDraftFromForm();
 
   if (!manualDraft) {
-    alert("Insert at least 1 item before saving");
+    showToast("Insert at least 1 item before saving.", "error");
     return;
   }
 
