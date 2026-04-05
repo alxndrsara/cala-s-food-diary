@@ -29,25 +29,74 @@
     <main id="screen-chat" class="screen active">
       <div class="main-grid">
         <section class="card chat-card">
-          <div class="card-header">
-            <h2>Input Meal</h2>
-            <span class="badge">GPT 4o Mini</span>
-          </div>
+  <div class="card-header">
+    <h2>Input Meal</h2>
+    <span class="badge">Qwen</span>
+  </div>
 
-          <div id="chat-box" class="chat-box"></div>
+  <div class="mode-switch">
+    <button id="mode-ai-btn" class="mode-btn active" type="button">AI Estimate</button>
+    <button id="mode-manual-btn" class="mode-btn" type="button">Manual Entry</button>
+  </div>
 
-          <textarea
-            id="user-input"
-            placeholder="Hello! What did you eat today? :>"
-          ></textarea>
+  <!-- AI MODE -->
+  <div id="ai-mode-panel">
+    <div id="chat-box" class="chat-box"></div>
 
-          <div class="actions">
-            <button id="send-btn" class="btn btn-primary">Send</button>
-            <button id="save-btn" class="btn btn-success">Log Meal</button>
-            <button id="reset-btn" class="btn btn-danger-soft">Clear</button>
-          </div>
-        </section>
+    <textarea
+      id="user-input"
+      placeholder="Hello! What did you eat today? :>"
+    ></textarea>
 
+    <div class="actions">
+      <button id="send-btn" class="btn btn-primary">Send</button>
+      <button id="save-btn" class="btn btn-success">Log Meal</button>
+      <button id="reset-btn" class="btn btn-danger-soft">Clear</button>
+    </div>
+  </div>
+
+  <!-- MANUAL MODE -->
+  <div id="manual-mode-panel" class="hidden">
+    <div class="manual-grid">
+      <label>
+        Food Name
+        <input type="text" id="manual-food-name" placeholder="i.e: Greek Yogurt" />
+      </label>
+
+      <label>
+        Quantity Note
+        <input type="text" id="manual-quantity-note" placeholder="i.e: 1 cup / 150 g / 1 bar" />
+      </label>
+
+      <label>
+        Calories
+        <input type="number" id="manual-calories" step="0.1" placeholder="0" />
+      </label>
+
+      <label>
+        Protein (g)
+        <input type="number" id="manual-protein" step="0.1" placeholder="0" />
+      </label>
+
+      <label>
+        Carbs (g)
+        <input type="number" id="manual-carbs" step="0.1" placeholder="0" />
+      </label>
+
+      <label>
+        Fat (g)
+        <input type="number" id="manual-fat" step="0.1" placeholder="0" />
+      </label>
+    </div>
+
+    <div class="actions">
+      <button id="preview-manual-btn" class="btn btn-primary">Preview Manual Entry</button>
+      <button id="save-btn-manual" class="btn btn-success">Log Meal</button>
+      <button id="reset-manual-btn" class="btn btn-danger-soft">Clear</button>
+    </div>
+  </div>
+</section>
+        
         <section class="card draft-card">
           <div class="card-header">
             <h2>Log Preview</h2>
