@@ -3,6 +3,7 @@ let currentDraft = null;
 let caloriesChart = null;
 let macrosChart = null;
 let logsCache = [];
+let inputMode = "ai";
 
 function formatToday() {
   return new Date().toISOString().split("T")[0];
@@ -100,6 +101,77 @@ document.querySelectorAll(".nav-btn").forEach(btn => {
     }
   });
 });
+
+function switchInputMode(mode) {
+  inputMode = mode;
+
+  const aiPanel = document.getElementById("ai-mode-panel");
+  const manualPanel = document.getElementById("manual-mode-panel");
+  const aiBtn = document.getElementById("mode-ai-btn");
+  const manualBtn = document.getElementById("mode-manual-btn");
+
+  if (mode === "ai") {
+    aiPanel.classList.remove("hidden");
+    manualPanel.classList.add("hidden");
+    aiBtn.classList.add("active");
+    manualBtn.classList.remove("active");
+  } else {
+    aiPanel.classList.add("hidden");
+    manualPanel.classList.remove("hidden");
+    aiBtn.classList.remove("active");
+    manualBtn.classList.add("active");
+  }
+}
+
+function buildManualDraftFromForm() {
+  const foodName = document.getElementById("manual-food-name").value.trim();
+  const quantityNote = document.getElementById("manual-quantity-note").value.trim();
+  const calories = Number(document.getElementById("manual-calories").value || 0);
+  const protein = Number(document.getElementById("manual-protein").value || 0);
+  const carbs = Number(document.getElementById("manual-carbs").value || 0);
+  const fat = Number(document.getElementById("manual-fat").value || 0);
+
+  if (!foodName) {
+    alert("Food Name wajib diisi untuk manual entry.");
+    return null;
+  }
+
+  return {
+    items: [
+      {
+        food_name: foodName,
+        quantity_note: quantityNote,
+        calories,
+        protein_g: protein,
+        carbs_g: carbs,
+        fat_g: fat
+      }
+    ],
+    total: {
+      calories,
+      protein_g: protein,
+      carbs_g: carbs,
+      fat_g: fat
+    }
+  };
+}
+
+function previewManualEntry() {
+  const manualDraft = buildManualDraftFromForm();
+  if (!manualDraft) return;
+
+  currentDraft = manualDraft;
+  renderDraft();
+}
+
+function resetManualForm() {
+  document.getElementById("manual-food-name").value = "";
+  document.getElementById("manual-quantity-note").value = "";
+  document.getElementById("manual-calories").value = "";
+  document.getElementById("manual-protein").value = "";
+  document.getElementById("manual-carbs").value = "";
+  document.getElementById("manual-fat").value = "";
+}
 
 function addMessage(role, text) {
   const chatBox = document.getElementById("chat-box");
@@ -256,15 +328,17 @@ async function saveFinal() {
   }
 
   const payload = {
-    action: "append_food_items",
-    date,
-    time,
-    session_id: generateSessionId(),
-    meal_name: mealName,
-    source: "ai",
-    notes: "saved from conversational AI",
-    items: currentDraft.items
-  };
+  action: "append_food_items",
+  date,
+  time,
+  session_id: generateSessionId(),
+  meal_name: mealName,
+  source: inputMode === "manual" ? "manual" : "ai",
+  notes: inputMode === "manual"
+    ? "saved from manual entry"
+    : "saved from conversational AI",
+  items: currentDraft.items
+};
 
   console.log("Saving payload to Apps Script:", payload);
 
@@ -301,6 +375,7 @@ function resetDraft() {
   conversation = [];
   currentDraft = null;
   document.getElementById("chat-box").innerHTML = "";
+  resetManualForm();
   renderDraft();
 }
 
@@ -716,6 +791,30 @@ document.getElementById("logs-filter-date").addEventListener("change", loadLogs)
 
 document.getElementById("close-edit-modal").addEventListener("click", closeEditModal);
 document.getElementById("save-edit-btn").addEventListener("click", saveEditedLog);
+
+document.getElementById("mode-ai-btn").addEventListener("click", () => {
+  switchInputMode("ai");
+});
+
+document.getElementById("mode-manual-btn").addEventListener("click", () => {
+  switchInputMode("manual");
+});
+
+document.getElementById("preview-manual-btn").addEventListener("click", previewManualEntry);
+document.getElementById("save-btn-manual").addEventListener("click", async () => {
+  const manualDraft = buildManualDraftFromForm();
+  if (!manualDraft) return;
+
+  currentDraft = manualDraft;
+  renderDraft();
+  await saveFinal();
+});
+
+document.getElementById("reset-manual-btn").addEventListener("click", () => {
+  resetManualForm();
+  currentDraft = null;
+  renderDraft();
+});
 
 renderDraft();
 
