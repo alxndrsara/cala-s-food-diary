@@ -575,3 +575,7 @@ textarea {
 .progress-orange {
   background: linear-gradient(90deg, #ffbf69, #fb923c);
 }
+
+.progress-over {
+  background: linear-gradient(90deg, #ff8a8a, #ff4d6d) !important;
+}
