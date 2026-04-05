@@ -31,7 +31,7 @@
         <section class="card chat-card">
   <div class="card-header">
     <h2>Input Meal</h2>
-    <span class="badge">Qwen</span>
+    <span class="badge">Qwen 3.6 Plus</span>
   </div>
 
   <div class="mode-switch">
@@ -170,26 +170,41 @@
 
         <div class="analytics-grid">
   <div class="summary-card">
-    <h3>Today's Calories</h3>
-    <p id="analytics-today-calories">-</p>
-    <small id="analytics-calories-remaining">-</small>
+  <h3>Today's Calories</h3>
+  <p id="analytics-today-calories">-</p>
+  <div class="progress-bar">
+    <div id="progress-calories" class="progress-fill progress-pink"></div>
   </div>
-  <div class="summary-card">
-    <h3>Today's Protein</h3>
-    <p id="analytics-today-protein">-</p>
-    <small id="analytics-protein-remaining">-</small>
-  </div>
-  <div class="summary-card">
-    <h3>Today's Carbs</h3>
-    <p id="analytics-today-carbs">-</p>
-    <small id="analytics-carbs-remaining">-</small>
-  </div>
-  <div class="summary-card">
-    <h3>Today's Fat</h3>
-    <p id="analytics-today-fat">-</p>
-    <small id="analytics-fat-remaining">-</small>
-  </div>
+  <small id="analytics-calories-remaining">-</small>
+</div>
 
+<div class="summary-card">
+  <h3>Today's Protein</h3>
+  <p id="analytics-today-protein">-</p>
+  <div class="progress-bar">
+    <div id="progress-protein" class="progress-fill progress-green"></div>
+  </div>
+  <small id="analytics-protein-remaining">-</small>
+</div>
+
+<div class="summary-card">
+  <h3>Today's Carbs</h3>
+  <p id="analytics-today-carbs">-</p>
+  <div class="progress-bar">
+    <div id="progress-carbs" class="progress-fill progress-purple"></div>
+  </div>
+  <small id="analytics-carbs-remaining">-</small>
+</div>
+
+<div class="summary-card">
+  <h3>Today's Fat</h3>
+  <p id="analytics-today-fat">-</p>
+  <div class="progress-bar">
+    <div id="progress-fat" class="progress-fill progress-orange"></div>
+  </div>
+  <small id="analytics-fat-remaining">-</small>
+</div>
+          
   <div class="draft-section">
   <h3>Calories Trend</h3>
   <canvas id="calories-chart" height="120"></canvas>
