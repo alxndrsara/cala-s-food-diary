@@ -124,35 +124,53 @@ function switchInputMode(mode) {
 }
 
 function buildManualDraftFromForm() {
-  const foodName = document.getElementById("manual-food-name").value.trim();
-  const quantityNote = document.getElementById("manual-quantity-note").value.trim();
-  const calories = Number(document.getElementById("manual-calories").value || 0);
-  const protein = Number(document.getElementById("manual-protein").value || 0);
-  const carbs = Number(document.getElementById("manual-carbs").value || 0);
-  const fat = Number(document.getElementById("manual-fat").value || 0);
+  const manualRows = document.querySelectorAll("#manual-items-container [data-manual-item]");
+  const items = [];
 
-  if (!foodName) {
-    alert("Food Name wajib diisi untuk manual entry.");
-    return null;
-  }
+  manualRows.forEach((row) => {
+    const foodName = row.querySelector(".manual-food-name")?.value.trim() || "";
+    const quantityNote = row.querySelector(".manual-quantity-note")?.value.trim() || "";
+    const calories = Number(row.querySelector(".manual-calories")?.value || 0);
+    const protein = Number(row.querySelector(".manual-protein")?.value || 0);
+    const carbs = Number(row.querySelector(".manual-carbs")?.value || 0);
+    const fat = Number(row.querySelector(".manual-fat")?.value || 0);
 
-  return {
-    items: [
-      {
+    if (foodName) {
+      items.push({
         food_name: foodName,
         quantity_note: quantityNote,
         calories,
         protein_g: protein,
         carbs_g: carbs,
         fat_g: fat
-      }
-    ],
-    total: {
-      calories,
-      protein_g: protein,
-      carbs_g: carbs,
-      fat_g: fat
+      });
     }
+  });
+
+  if (!items.length) {
+    alert("Isi minimal 1 Food Name untuk manual entry.");
+    return null;
+  }
+
+  const total = items.reduce(
+    (acc, item) => {
+      acc.calories += Number(item.calories || 0);
+      acc.protein_g += Number(item.protein_g || 0);
+      acc.carbs_g += Number(item.carbs_g || 0);
+      acc.fat_g += Number(item.fat_g || 0);
+      return acc;
+    },
+    {
+      calories: 0,
+      protein_g: 0,
+      carbs_g: 0,
+      fat_g: 0
+    }
+  );
+
+  return {
+    items,
+    total
   };
 }
 
@@ -165,12 +183,7 @@ function previewManualEntry() {
 }
 
 function resetManualForm() {
-  document.getElementById("manual-food-name").value = "";
-  document.getElementById("manual-quantity-note").value = "";
-  document.getElementById("manual-calories").value = "";
-  document.getElementById("manual-protein").value = "";
-  document.getElementById("manual-carbs").value = "";
-  document.getElementById("manual-fat").value = "";
+  renderManualItems(1);
 }
 
 function addMessage(role, text) {
@@ -197,6 +210,49 @@ function extractJson(text) {
 
   const jsonString = cleaned.slice(firstBrace, lastBrace + 1);
   return JSON.parse(jsonString);
+}
+
+function renderManualItems(count = 1) {
+  const container = document.getElementById("manual-items-container");
+  container.innerHTML = "";
+
+  for (let i = 0; i < count; i++) {
+    container.insertAdjacentHTML("beforeend", createManualItemHTML(i));
+  }
+
+  updateManualItemTitles();
+}
+
+function addManualItem() {
+  const container = document.getElementById("manual-items-container");
+  const currentCount = container.querySelectorAll("[data-manual-item]").length;
+
+  container.insertAdjacentHTML("beforeend", createManualItemHTML(currentCount));
+  updateManualItemTitles();
+}
+
+function removeManualItem(button) {
+  const container = document.getElementById("manual-items-container");
+  const allItems = container.querySelectorAll("[data-manual-item]");
+
+  if (allItems.length <= 1) {
+    alert("Minimal harus ada 1 item.");
+    return;
+  }
+
+  button.closest("[data-manual-item]").remove();
+  updateManualItemTitles();
+}
+
+function updateManualItemTitles() {
+  const items = document.querySelectorAll("#manual-items-container [data-manual-item]");
+
+  items.forEach((item, index) => {
+    const title = item.querySelector(".manual-item-head h3");
+    if (title) {
+      title.textContent = `Item ${index + 1}`;
+    }
+  });
 }
 
 function renderDraft() {
@@ -792,6 +848,7 @@ document.getElementById("logs-filter-date").addEventListener("change", loadLogs)
 document.getElementById("close-edit-modal").addEventListener("click", closeEditModal);
 document.getElementById("save-edit-btn").addEventListener("click", saveEditedLog);
 
+
 document.getElementById("mode-ai-btn").addEventListener("click", () => {
   switchInputMode("ai");
 });
@@ -816,6 +873,9 @@ document.getElementById("reset-manual-btn").addEventListener("click", () => {
   renderDraft();
 });
 
+document.getElementById("add-manual-item-btn").addEventListener("click", addManualItem);
+
+renderManualItems(1);
 renderDraft();
 
 if ("serviceWorker" in navigator) {
