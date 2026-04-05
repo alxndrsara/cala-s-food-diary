@@ -834,15 +834,18 @@ function renderAnalyticsCharts(dailyData) {
 
 async function loadAnalytics() {
   const dailyContainer = document.getElementById("daily-summary-container");
+  const weeklyContainer = document.getElementById("weekly-summary-container");
   const monthlyContainer = document.getElementById("monthly-summary-container");
 
   dailyContainer.innerHTML = `<div class="draft-empty">Loading daily summary...</div>`;
+  weeklyContainer.innerHTML = `<div class="draft-empty">Loading weekly summary...</div>`;
   monthlyContainer.innerHTML = `<div class="draft-empty">Loading monthly summary...</div>`;
 
   try {
    const dailyData = await fetchSheetData("daily_summary");
-const monthlyData = await fetchSheetData("monthly_summary");
-const targetsData = await fetchSheetData("targets");
+  const weeklyData = await fetchSheetData("weekly_summary");
+  const monthlyData = await fetchSheetData("monthly_summary");
+  const targetsData = await fetchSheetData("targets");
 
 renderAnalyticsCharts(dailyData);
 
@@ -927,7 +930,35 @@ setProgressBar("progress-fat", todayFat, targetFat);
             </div>
           `)
           .join("")
-      : `<div class="draft-empty">Belum ada daily summary.</div>`;
+      : `<div class="draft-empty">No daily summary yet.</div>`;
+
+    const recentWeekly = [...weeklyData].slice(0, 8);
+
+weeklyContainer.innerHTML = recentWeekly.length
+  ? recentWeekly
+      .map(week => `
+        <div class="month-card">
+          <div class="log-card-top">
+            <div>
+              <div class="log-title">${week.week_key || "-"}</div>
+              <div class="log-meta">${week.days_logged || 0} days logged</div>
+            </div>
+            <div class="kcal-badge">${Number(week.avg_daily_calories || 0).toFixed(0)} avg kcal</div>
+          </div>
+
+          <div class="macro-row">
+            <div class="macro-chip">Avg P ${Number(week.avg_daily_protein_g || 0).toFixed(1)} g</div>
+            <div class="macro-chip">Avg C ${Number(week.avg_daily_carbs_g || 0).toFixed(1)} g</div>
+            <div class="macro-chip">Avg F ${Number(week.avg_daily_fat_g || 0).toFixed(1)} g</div>
+          </div>
+
+          <div class="log-meta" style="margin-top: 10px;">
+            Total: ${Number(week.total_calories || 0).toFixed(0)} kcal
+          </div>
+        </div>
+      `)
+      .join("")
+  : `<div class="draft-empty">No weekly summary yet.</div>`;
 
     const recentMonthly = [...monthlyData].reverse().slice(0, 6);
 
@@ -951,11 +982,12 @@ setProgressBar("progress-fat", todayFat, targetFat);
             </div>
           `)
           .join("")
-      : `<div class="draft-empty">Belum ada monthly summary.</div>`;
+      : `<div class="draft-empty">No monthly summary yet.</div>`;
   } catch (error) {
     console.error("LOAD ANALYTICS ERROR:", error);
-    dailyContainer.innerHTML = `<div class="draft-empty">Gagal memuat daily summary.<br>${error.message}</div>`;
-    monthlyContainer.innerHTML = `<div class="draft-empty">Gagal memuat monthly summary.<br>${error.message}</div>`;
+    dailyContainer.innerHTML = `<div class="draft-empty">Failed to load daily summary.<br>${error.message}</div>`;
+    weeklyContainer.innerHTML = `<div class="draft-empty">Failed to load weekly summary.<br>${error.message}</div>`;
+    monthlyContainer.innerHTML = `<div class="draft-empty">Failed to load monthly summary.<br>${error.message}</div>`;
   }
 }
 
