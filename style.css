@@ -543,3 +543,35 @@ textarea {
     transform: translateY(0);
   }
 }
+
+.progress-bar {
+  width: 100%;
+  height: 10px;
+  background: #f4e7ef;
+  border-radius: 999px;
+  overflow: hidden;
+  margin: 10px 0 8px;
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  transition: width 0.35s ease;
+}
+
+.progress-pink {
+  background: linear-gradient(90deg, #ff7db8, #ff4fa0);
+}
+
+.progress-green {
+  background: linear-gradient(90deg, #4ade80, #22c55e);
+}
+
+.progress-purple {
+  background: linear-gradient(90deg, #b388ff, #8b5cf6);
+}
+
+.progress-orange {
+  background: linear-gradient(90deg, #ffbf69, #fb923c);
+}
