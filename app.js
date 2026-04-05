@@ -254,13 +254,21 @@ function setProgressBar(id, value, target) {
   const safeTarget = Number(target || 0);
   const safeValue = Number(value || 0);
 
+  el.classList.remove("progress-over");
+
   if (safeTarget <= 0) {
     el.style.width = "0%";
     return;
   }
 
-  const percent = Math.min((safeValue / safeTarget) * 100, 100);
+  const ratio = safeValue / safeTarget;
+  const percent = Math.min(ratio * 100, 100);
+
   el.style.width = `${percent}%`;
+
+  if (ratio > 1) {
+    el.classList.add("progress-over");
+  }
 }
 
 function createManualItemHTML(index) {
@@ -865,17 +873,30 @@ document.getElementById("analytics-today-carbs").textContent =
 document.getElementById("analytics-today-fat").textContent =
   `${todayFat.toFixed(1)} / ${targetFat.toFixed(1)} g`;
 
+const caloriesDiff = targetCalories - todayCalories;
+const proteinDiff = targetProtein - todayProtein;
+const carbsDiff = targetCarbs - todayCarbs;
+const fatDiff = targetFat - todayFat;
+
 document.getElementById("analytics-calories-remaining").textContent =
-  `Remaining: ${(targetCalories - todayCalories).toFixed(0)} kcal`;
+  caloriesDiff >= 0
+    ? `Remaining: ${caloriesDiff.toFixed(0)} kcal`
+    : `Over by: ${Math.abs(caloriesDiff).toFixed(0)} kcal`;
 
 document.getElementById("analytics-protein-remaining").textContent =
-  `Remaining: ${(targetProtein - todayProtein).toFixed(1)} g`;
+  proteinDiff >= 0
+    ? `Remaining: ${proteinDiff.toFixed(1)} g`
+    : `Over by: ${Math.abs(proteinDiff).toFixed(1)} g`;
 
 document.getElementById("analytics-carbs-remaining").textContent =
-  `Remaining: ${(targetCarbs - todayCarbs).toFixed(1)} g`;
+  carbsDiff >= 0
+    ? `Remaining: ${carbsDiff.toFixed(1)} g`
+    : `Over by: ${Math.abs(carbsDiff).toFixed(1)} g`;
 
 document.getElementById("analytics-fat-remaining").textContent =
-  `Remaining: ${(targetFat - todayFat).toFixed(1)} g`;
+  fatDiff >= 0
+    ? `Remaining: ${fatDiff.toFixed(1)} g`
+    : `Over by: ${Math.abs(fatDiff).toFixed(1)} g`;
 
 setProgressBar("progress-calories", todayCalories, targetCalories);
 setProgressBar("progress-protein", todayProtein, targetProtein);
