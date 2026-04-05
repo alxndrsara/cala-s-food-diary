@@ -57,45 +57,19 @@
 
   <!-- MANUAL MODE -->
   <div id="manual-mode-panel" class="hidden">
-    <div class="manual-grid">
-      <label>
-        Food Name
-        <input type="text" id="manual-food-name" placeholder="i.e: Greek Yogurt" />
-      </label>
+  <div id="manual-items-container"></div>
 
-      <label>
-        Quantity Note
-        <input type="text" id="manual-quantity-note" placeholder="i.e: 1 cup / 150 g / 1 bar" />
-      </label>
-
-      <label>
-        Calories
-        <input type="number" id="manual-calories" step="0.1" placeholder="0" />
-      </label>
-
-      <label>
-        Protein (g)
-        <input type="number" id="manual-protein" step="0.1" placeholder="0" />
-      </label>
-
-      <label>
-        Carbs (g)
-        <input type="number" id="manual-carbs" step="0.1" placeholder="0" />
-      </label>
-
-      <label>
-        Fat (g)
-        <input type="number" id="manual-fat" step="0.1" placeholder="0" />
-      </label>
-    </div>
-
-    <div class="actions">
-      <button id="preview-manual-btn" class="btn btn-primary">Preview Manual Entry</button>
-      <button id="save-btn-manual" class="btn btn-success">Log Meal</button>
-      <button id="reset-manual-btn" class="btn btn-danger-soft">Clear</button>
-    </div>
+  <div class="actions" style="margin-bottom: 14px;">
+    <button id="add-manual-item-btn" class="btn btn-primary" type="button">+ Add Another Item</button>
   </div>
-</section>
+
+  <div class="actions">
+    <button id="preview-manual-btn" class="btn btn-primary">Preview Manual Entry</button>
+    <button id="save-btn-manual" class="btn btn-success">Log Meal</button>
+    <button id="reset-manual-btn" class="btn btn-danger-soft">Clear</button>
+  </div>
+</div>
+  </section>
         
         <section class="card draft-card">
           <div class="card-header">
