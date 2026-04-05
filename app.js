@@ -148,9 +148,8 @@ function buildManualDraftFromForm() {
   });
 
   if (!items.length) {
-    alert("Isi minimal 1 Food Name untuk manual entry.");
-    return null;
-  }
+  return null;
+}
 
   const total = items.reduce(
     (acc, item) => {
@@ -172,6 +171,21 @@ function buildManualDraftFromForm() {
     items,
     total
   };
+}
+
+function autoPreviewManualEntry() {
+  if (inputMode !== "manual") return;
+
+  const manualDraft = buildManualDraftFromForm();
+
+  if (!manualDraft) {
+    currentDraft = null;
+    renderDraft();
+    return;
+  }
+
+  currentDraft = manualDraft;
+  renderDraft();
 }
 
 function previewManualEntry() {
@@ -212,6 +226,49 @@ function extractJson(text) {
   return JSON.parse(jsonString);
 }
 
+function createManualItemHTML(index) {
+  return `
+    <div class="manual-item-card" data-manual-item>
+      <div class="manual-item-head">
+        <h3>Item ${index + 1}</h3>
+        <button type="button" class="manual-remove-btn" onclick="removeManualItem(this)">Remove</button>
+      </div>
+
+      <div class="manual-grid">
+        <label>
+          Food Name
+          <input type="text" class="manual-food-name" placeholder="i.e: Greek Yogurt" />
+        </label>
+
+        <label>
+          Quantity Note
+          <input type="text" class="manual-quantity-note" placeholder="i.e: 1 cup / 150 g / 1 bar" />
+        </label>
+
+        <label>
+          Calories
+          <input type="number" class="manual-calories" step="0.1" placeholder="0" />
+        </label>
+
+        <label>
+          Protein (g)
+          <input type="number" class="manual-protein" step="0.1" placeholder="0" />
+        </label>
+
+        <label>
+          Carbs (g)
+          <input type="number" class="manual-carbs" step="0.1" placeholder="0" />
+        </label>
+
+        <label>
+          Fat (g)
+          <input type="number" class="manual-fat" step="0.1" placeholder="0" />
+        </label>
+      </div>
+    </div>
+  `;
+}
+
 function renderManualItems(count = 1) {
   const container = document.getElementById("manual-items-container");
   container.innerHTML = "";
@@ -229,6 +286,7 @@ function addManualItem() {
 
   container.insertAdjacentHTML("beforeend", createManualItemHTML(currentCount));
   updateManualItemTitles();
+  autoPreviewManualEntry();
 }
 
 function removeManualItem(button) {
@@ -242,6 +300,7 @@ function removeManualItem(button) {
 
   button.closest("[data-manual-item]").remove();
   updateManualItemTitles();
+  autoPreviewManualEntry();
 }
 
 function updateManualItemTitles() {
@@ -855,12 +914,20 @@ document.getElementById("mode-ai-btn").addEventListener("click", () => {
 
 document.getElementById("mode-manual-btn").addEventListener("click", () => {
   switchInputMode("manual");
+  autoPreviewManualEntry();
+});
+document.getElementById("manual-items-container").addEventListener("input", () => {
+  autoPreviewManualEntry();
 });
 
 document.getElementById("preview-manual-btn").addEventListener("click", previewManualEntry);
 document.getElementById("save-btn-manual").addEventListener("click", async () => {
   const manualDraft = buildManualDraftFromForm();
-  if (!manualDraft) return;
+
+  if (!manualDraft) {
+    alert("Insert at least 1 item before saving");
+    return;
+  }
 
   currentDraft = manualDraft;
   renderDraft();
@@ -869,8 +936,7 @@ document.getElementById("save-btn-manual").addEventListener("click", async () =>
 
 document.getElementById("reset-manual-btn").addEventListener("click", () => {
   resetManualForm();
-  currentDraft = null;
-  renderDraft();
+  autoPreviewManualEntry();
 });
 
 document.getElementById("add-manual-item-btn").addEventListener("click", addManualItem);
