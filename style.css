@@ -785,10 +785,12 @@ textarea {
 
 /* ===== FINAL HEADER + BOTTOM NAV OVERRIDE ===== */
 
+/* ===== ICON-ONLY BOTTOM NAV FINAL ===== */
+
 .app-shell {
   max-width: 1100px;
   margin: 0 auto;
-  padding: 24px 16px 110px;
+  padding: 24px 16px 104px;
 }
 
 .app-header {
@@ -801,7 +803,7 @@ textarea {
   display: inline-flex;
   align-items: center;
   gap: 12px;
-  background: rgba(255, 255, 255, 0.88);
+  background: rgba(255, 255, 255, 0.9);
   border: 1px solid #f2d9e8;
   border-radius: 20px;
   padding: 10px 16px;
@@ -838,16 +840,15 @@ textarea {
   left: 50% !important;
   bottom: 10px !important;
   transform: translateX(-50%) !important;
-  width: min(420px, calc(100% - 20px)) !important;
+  width: min(280px, calc(100% - 22px)) !important;
   display: flex !important;
-  flex-direction: row !important;
   justify-content: space-between !important;
-  align-items: stretch !important;
-  gap: 6px !important;
+  align-items: center !important;
+  gap: 8px !important;
   padding: 8px !important;
-  background: rgba(255, 255, 255, 0.97) !important;
+  background: rgba(255, 255, 255, 0.96) !important;
   border: 1px solid #f2d9e8 !important;
-  border-radius: 22px !important;
+  border-radius: 999px !important;
   box-shadow: 0 14px 34px rgba(255, 92, 168, 0.14) !important;
   backdrop-filter: blur(14px) !important;
   z-index: 3000 !important;
@@ -856,22 +857,19 @@ textarea {
 .bottom-nav .nav-btn {
   flex: 1 1 0 !important;
   min-width: 0 !important;
-  min-height: 58px !important;
+  height: 52px !important;
   border: none !important;
-  border-radius: 16px !important;
+  border-radius: 999px !important;
   background: transparent !important;
-  color: #7b6174 !important;
+  color: #876a7b !important;
   cursor: pointer !important;
   display: flex !important;
-  flex-direction: column !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 4px !important;
-  padding: 7px 4px !important;
+  padding: 0 !important;
   font-family: var(--font-body) !important;
-  font-weight: 800 !important;
-  line-height: 1 !important;
   box-shadow: none !important;
+  transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease !important;
   appearance: none !important;
   -webkit-appearance: none !important;
 }
@@ -880,20 +878,18 @@ textarea {
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  width: 30px !important;
-  height: 30px !important;
-  font-size: 18px !important;
+  width: 36px !important;
+  height: 36px !important;
+  font-size: 21px !important;
   line-height: 1 !important;
-  border-radius: 10px !important;
+  border-radius: 999px !important;
   background: transparent !important;
   margin: 0 !important;
+  transition: background 0.18s ease, transform 0.18s ease !important;
 }
 
 .bottom-nav .nav-btn .nav-text {
-  display: block !important;
-  font-size: 11px !important;
-  line-height: 1.1 !important;
-  margin: 0 !important;
+  display: none !important;
 }
 
 .bottom-nav .nav-btn:hover {
@@ -913,7 +909,7 @@ textarea {
 }
 
 .bottom-nav .nav-btn.active .nav-icon {
-  background: rgba(255, 255, 255, 0.20) !important;
+  background: rgba(255, 255, 255, 0.18) !important;
 }
 
 .bottom-nav .nav-btn.active:hover {
@@ -922,12 +918,12 @@ textarea {
 }
 
 .bottom-nav .nav-btn.active:hover .nav-icon {
-  background: rgba(255, 255, 255, 0.20) !important;
+  background: rgba(255, 255, 255, 0.18) !important;
 }
 
 @media (max-width: 640px) {
   .app-shell {
-    padding: 18px 12px 98px !important;
+    padding: 18px 12px 94px !important;
   }
 
   .brand-wrap {
@@ -952,26 +948,19 @@ textarea {
   }
 
   .bottom-nav {
-    width: calc(100% - 14px) !important;
+    width: min(250px, calc(100% - 16px)) !important;
     bottom: 8px !important;
-    padding: 8px 6px !important;
-    gap: 4px !important;
-    border-radius: 20px !important;
+    padding: 7px !important;
+    gap: 6px !important;
   }
 
   .bottom-nav .nav-btn {
-    min-height: 54px !important;
-    padding: 6px 2px !important;
-    border-radius: 14px !important;
+    height: 48px !important;
   }
 
   .bottom-nav .nav-btn .nav-icon {
-    width: 26px !important;
-    height: 26px !important;
-    font-size: 17px !important;
-  }
-
-  .bottom-nav .nav-btn .nav-text {
-    font-size: 10px !important;
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 19px !important;
   }
 }
