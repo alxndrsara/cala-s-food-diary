@@ -213,7 +213,14 @@ function addMessage(role, text) {
   const chatBox = document.getElementById("chat-box");
   const div = document.createElement("div");
   div.className = `message ${role}`;
-  div.textContent = text;
+
+  const avatar = role === "user" ? "C" : "🤖";
+
+  div.innerHTML = `
+    <div class="message-avatar">${avatar}</div>
+    <div class="message-bubble">${String(text || "").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
+  `;
+
   chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
 }
@@ -1063,34 +1070,6 @@ analyticsMonthlyDataCache = monthlyData;
 renderDailySummary();
 renderWeeklySummary();
 
-    const recentWeekly = [...weeklyData].slice(0, 8);
-
-weeklyContainer.innerHTML = recentWeekly.length
-  ? recentWeekly
-      .map(week => `
-        <div class="month-card">
-          <div class="log-card-top">
-            <div>
-              <div class="log-title">${week.week_key || "-"}</div>
-              <div class="log-meta">${week.days_logged || 0} days logged</div>
-            </div>
-            <div class="kcal-badge">${Number(week.avg_daily_calories || 0).toFixed(0)} avg kcal</div>
-          </div>
-
-          <div class="macro-row">
-            <div class="macro-chip">Avg P ${Number(week.avg_daily_protein_g || 0).toFixed(1)} g</div>
-            <div class="macro-chip">Avg C ${Number(week.avg_daily_carbs_g || 0).toFixed(1)} g</div>
-            <div class="macro-chip">Avg F ${Number(week.avg_daily_fat_g || 0).toFixed(1)} g</div>
-          </div>
-
-          <div class="log-meta" style="margin-top: 10px;">
-            Total: ${Number(week.total_calories || 0).toFixed(0)} kcal
-          </div>
-        </div>
-      `)
-      .join("")
-  : `<div class="draft-empty">No weekly summary yet.</div>`;
-
     const recentMonthly = [...monthlyData].reverse().slice(0, 6);
 
     monthlyContainer.innerHTML = recentMonthly.length
@@ -1122,9 +1101,20 @@ weeklyContainer.innerHTML = recentWeekly.length
   }
 }
 
-document.getElementById("send-btn").addEventListener("click", sendMessage);
-document.getElementById("save-btn").addEventListener("click", saveFinal);
-document.getElementById("reset-btn").addEventListener("click", resetDraft);
+document.getElementById("send-btn")?.addEventListener("click", sendMessage);
+document.getElementById("reset-btn")?.addEventListener("click", resetDraft);
+document.getElementById("save-btn-manual")?.addEventListener("click", async () => {
+  const manualDraft = buildManualDraftFromForm();
+
+  if (!manualDraft) {
+    showToast("Insert at least 1 item before saving.", "error");
+    return;
+  }
+
+  currentDraft = manualDraft;
+  renderDraft();
+  await saveFinal();
+});
 
 document.getElementById("refresh-logs-btn").addEventListener("click", loadLogs);
 document.getElementById("refresh-analytics-btn").addEventListener("click", loadAnalytics);
@@ -1150,17 +1140,11 @@ document.getElementById("manual-items-container").addEventListener("input", () =
 });
 
 document.getElementById("preview-manual-btn").addEventListener("click", previewManualEntry);
-document.getElementById("save-btn-manual").addEventListener("click", async () => {
-  const manualDraft = buildManualDraftFromForm();
 
-  if (!manualDraft) {
-    showToast("Insert at least 1 item before saving.", "error");
-    return;
+document.getElementById("user-input")?.addEventListener("keydown", (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+    sendMessage();
   }
-
-  currentDraft = manualDraft;
-  renderDraft();
-  await saveFinal();
 });
 
 document.getElementById("logs-prev-btn").addEventListener("click", () => {
