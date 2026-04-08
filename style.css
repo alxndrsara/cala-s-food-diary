@@ -38,11 +38,13 @@ body {
 .app-shell {
   max-width: 1100px;
   margin: 0 auto;
-  padding: 28px 20px 40px;
+  padding: 28px 20px 110px;
 }
 
 .app-header {
-  margin-bottom: 18px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
 }
 
 .app-header h1 {
@@ -88,7 +90,9 @@ body {
 .brand-text {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  align-items: center;
+  gap: 2px;
+  text-align: center;
 }
 
 .brand-title {
@@ -115,55 +119,54 @@ body {
   margin-top: 4px;
 }
 
-.top-nav {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 22px;
-  flex-wrap: wrap;
-}
-
 .nav-btn {
-  border: 1px solid #f2d9e8;
-  padding: 12px 16px;
+  border: none;
+  padding: 10px 10px 9px;
   border-radius: 18px;
-  background: rgba(255,255,255,0.88);
+  background: transparent;
   cursor: pointer;
   color: var(--muted);
   font-weight: 800;
-  display: inline-flex;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 10px;
-  min-width: 120px;
   justify-content: center;
-  box-shadow: 0 8px 20px rgba(255, 105, 180, 0.06);
-  transition: 0.2s ease;
+  gap: 4px;
+  min-height: 62px;
+  transition: 0.18s ease;
+  font-family: var(--font-body);
 }
 
 .nav-btn.active {
   background: linear-gradient(135deg, #ff7cbc 0%, #ff5ca8 100%);
   color: white;
-  box-shadow: 0 12px 26px rgba(255, 92, 168, 0.24);
-  border-color: transparent;
+  box-shadow: 0 10px 24px rgba(255, 92, 168, 0.22);
 }
 
 .nav-btn.active .nav-icon {
   background: rgba(255,255,255,0.22);
 }
 
-.nav-btn:hover {
-  transform: translateY(-2px);
-  background: #fff7fb;
+.nav-btn.active:hover {
+  background: linear-gradient(135deg, #ff7cbc 0%, #ff5ca8 100%);
+  color: white;
 }
 
-.nav-btn .nav-icon {
-  width: 34px;
-  height: 34px;
-  border-radius: 12px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: #fff0f7;
-  font-size: 16px;
+.nav-btn.active:hover .nav-icon {
+  background: rgba(255,255,255,0.22);
+}
+
+.nav-btn:hover {
+  background: #fff6fb;
+  color: #9b5f7f;
+}
+
+.nav-btn:hover .nav-icon {
+  background: #ffe4f1;
+}
+.nav-btn .nav-text {
+  font-size: 12px;
+  line-height: 1;
 }
 
 .nav-btn .nav-text {
@@ -386,17 +389,46 @@ textarea {
 }
 
 @media (max-width: 640px) {
+
+  .app-shell {
+    padding: 20px 14px 104px;
+  }
+
   .brand-wrap {
     width: 100%;
+    justify-content: center;
+    padding: 10px 14px;
   }
 
   .brand-title {
     font-size: 21px;
   }
 
-  .nav-btn {
-    flex: 1 1 30%;
-    min-width: unset;
+  .brand-badge {
+    width: 44px;
+    height: 44px;
+    font-size: 22px;
+  }
+
+  .brand-badge {
+    width: 44px;
+    height: 44px;
+    font-size: 22px;
+  }
+
+.nav-btn {
+    min-height: 58px;
+    border-radius: 16px;
+  }
+
+   .nav-btn .nav-icon {
+    width: 34px;
+    height: 34px;
+    font-size: 16px;
+  }
+
+    .nav-btn .nav-text {
+    font-size: 11px;
   }
 
   .message-bubble {
