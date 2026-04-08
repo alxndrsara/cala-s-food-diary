@@ -1,4 +1,4 @@
-const CACHE_NAME = "cala-food-diary-v4";
+const CACHE_NAME = "cala-food-diary-v5";
 const urlsToCache = [
   "./",
   "./index.html",
