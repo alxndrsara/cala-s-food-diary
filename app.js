@@ -4,6 +4,15 @@ let caloriesChart = null;
 let macrosChart = null;
 let logsCache = [];
 let inputMode = "ai";
+let logsCurrentPage = 1;
+const LOGS_PER_PAGE = 12;
+
+let analyticsDailyOffset = 0;   // 0 = latest 7 days
+let analyticsWeeklyOffset = 0;  // 0 = latest 4 weeks
+
+let analyticsDailyDataCache = [];
+let analyticsWeeklyDataCache = [];
+let analyticsMonthlyDataCache = [];
 
 function formatToday() {
   return new Date().toISOString().split("T")[0];
@@ -359,6 +368,137 @@ function updateManualItemTitles() {
   });
 }
 
+function sortDailyData(data) {
+  return [...data]
+    .map(row => ({
+      ...row,
+      normalized_date: normalizeDate(row.date)
+    }))
+    .sort((a, b) => new Date(a.normalized_date) - new Date(b.normalized_date));
+}
+
+function sortWeeklyData(data) {
+  return [...data].sort((a, b) => {
+    const aKey = String(a.week_key || "");
+    const bKey = String(b.week_key || "");
+    return aKey.localeCompare(bKey);
+  });
+}
+
+function getPagedSliceFromEnd(data, pageSize, offsetPages) {
+  const sorted = [...data];
+  const total = sorted.length;
+
+  const end = total - (offsetPages * pageSize);
+  const start = Math.max(0, end - pageSize);
+
+  return sorted.slice(start, Math.max(start, end));
+}
+
+function renderDailySummary() {
+  const dailyContainer = document.getElementById("daily-summary-container");
+  const label = document.getElementById("daily-range-label");
+  const prevBtn = document.getElementById("daily-prev-btn");
+  const nextBtn = document.getElementById("daily-next-btn");
+
+  const sortedDaily = sortDailyData(analyticsDailyDataCache);
+  const pageSize = 7;
+  const total = sortedDaily.length;
+
+  const slice = getPagedSliceFromEnd(sortedDaily, pageSize, analyticsDailyOffset);
+
+  if (!slice.length) {
+    dailyContainer.innerHTML = `<div class="draft-empty">No daily summary yet.</div>`;
+    label.textContent = "-";
+    prevBtn.disabled = true;
+    nextBtn.disabled = analyticsDailyOffset === 0;
+    return;
+  }
+
+  const firstDate = slice[0].normalized_date;
+  const lastDate = slice[slice.length - 1].normalized_date;
+  label.textContent = `${firstDate} → ${lastDate}`;
+
+  dailyContainer.innerHTML = slice
+    .slice()
+    .reverse()
+    .map(day => `
+      <div class="day-card">
+        <div class="log-card-top">
+          <div>
+            <div class="log-title">${day.normalized_date}</div>
+            <div class="log-meta">
+              ${day.meal_count || 0} meals • ${day.food_count || 0} foods
+            </div>
+          </div>
+          <div class="kcal-badge">${Number(day.total_calories || 0).toFixed(0)} kcal</div>
+        </div>
+
+        <div class="macro-row">
+          <div class="macro-chip">P ${Number(day.total_protein_g || 0).toFixed(1)} g</div>
+          <div class="macro-chip">C ${Number(day.total_carbs_g || 0).toFixed(1)} g</div>
+          <div class="macro-chip">F ${Number(day.total_fat_g || 0).toFixed(1)} g</div>
+        </div>
+      </div>
+    `)
+    .join("");
+
+  prevBtn.disabled = (analyticsDailyOffset + 1) * pageSize >= total;
+  nextBtn.disabled = analyticsDailyOffset === 0;
+}
+
+function renderWeeklySummary() {
+  const weeklyContainer = document.getElementById("weekly-summary-container");
+  const label = document.getElementById("weekly-range-label");
+  const prevBtn = document.getElementById("weekly-prev-btn");
+  const nextBtn = document.getElementById("weekly-next-btn");
+
+  const sortedWeekly = sortWeeklyData(analyticsWeeklyDataCache);
+  const pageSize = 4;
+  const total = sortedWeekly.length;
+
+  const slice = getPagedSliceFromEnd(sortedWeekly, pageSize, analyticsWeeklyOffset);
+
+  if (!slice.length) {
+    weeklyContainer.innerHTML = `<div class="draft-empty">No weekly summary yet.</div>`;
+    label.textContent = "-";
+    prevBtn.disabled = true;
+    nextBtn.disabled = analyticsWeeklyOffset === 0;
+    return;
+  }
+
+  label.textContent = `${slice[0].week_key || "-"} → ${slice[slice.length - 1].week_key || "-"}`;
+
+  weeklyContainer.innerHTML = slice
+    .slice()
+    .reverse()
+    .map(week => `
+      <div class="month-card">
+        <div class="log-card-top">
+          <div>
+            <div class="log-title">${week.week_key || "-"}</div>
+            <div class="log-meta">${week.days_logged || 0} days logged</div>
+          </div>
+          <div class="kcal-badge">${Number(week.avg_daily_calories || 0).toFixed(0)} avg kcal</div>
+        </div>
+
+        <div class="macro-row">
+          <div class="macro-chip">Avg P ${Number(week.avg_daily_protein_g || 0).toFixed(1)} g</div>
+          <div class="macro-chip">Avg C ${Number(week.avg_daily_carbs_g || 0).toFixed(1)} g</div>
+          <div class="macro-chip">Avg F ${Number(week.avg_daily_fat_g || 0).toFixed(1)} g</div>
+        </div>
+
+        <div class="log-meta" style="margin-top: 10px;">
+          Total: ${Number(week.total_calories || 0).toFixed(0)} kcal
+        </div>
+      </div>
+    `)
+    .join("");
+
+  prevBtn.disabled = (analyticsWeeklyOffset + 1) * pageSize >= total;
+  nextBtn.disabled = analyticsWeeklyOffset === 0;
+}
+
 function renderDraft() {
   const rawOutput = document.getElementById("draft-output");
   const draftEmpty = document.getElementById("draft-empty");
@@ -584,6 +724,9 @@ function groupLogsBySession(logs) {
 async function loadLogs() {
   const container = document.getElementById("logs-container");
   const filterDate = document.getElementById("logs-filter-date").value;
+  const prevBtn = document.getElementById("logs-prev-btn");
+  const nextBtn = document.getElementById("logs-next-btn");
+  const pageLabel = document.getElementById("logs-page-label");
 
   container.innerHTML = `<div class="draft-empty">Loading logs...</div>`;
 
@@ -591,69 +734,73 @@ async function loadLogs() {
     let logs = await fetchSheetData("logs");
     logsCache = logs;
 
+    logs = [...logs].sort((a, b) => {
+      const aDateTime = `${normalizeDate(a.date)} ${a.time || "00:00"}`;
+      const bDateTime = `${normalizeDate(b.date)} ${b.time || "00:00"}`;
+      return bDateTime.localeCompare(aDateTime);
+    });
+
     if (filterDate) {
       logs = logs.filter(log => normalizeDate(log.date) === filterDate);
     }
 
-    if (!logs.length) {
+    const totalLogs = logs.length;
+    const totalPages = Math.max(1, Math.ceil(totalLogs / LOGS_PER_PAGE));
+
+    if (logsCurrentPage > totalPages) {
+      logsCurrentPage = totalPages;
+    }
+
+    const start = (logsCurrentPage - 1) * LOGS_PER_PAGE;
+    const end = start + LOGS_PER_PAGE;
+    const pageLogs = logs.slice(start, end);
+
+    if (!totalLogs) {
       container.innerHTML = `<div class="draft-empty">Belum ada data logs.</div>`;
+      pageLabel.textContent = `Page 0 / 0`;
+      prevBtn.disabled = true;
+      nextBtn.disabled = true;
       return;
     }
 
-    const groupedSessions = groupLogsBySession(logs);
-
-    container.innerHTML = groupedSessions
-      .map(session => `
+    container.innerHTML = pageLogs
+      .map(item => `
         <div class="log-card">
           <div class="log-card-top">
             <div>
-              <div class="log-title">${session.meal_name || "Meal"}</div>
+              <div class="log-title">${item.food_name || "-"}</div>
               <div class="log-meta">
-                ${normalizeDate(session.date)} • ${session.time || "-"}
+                ${normalizeDate(item.date)} • ${item.time || "-"}
               </div>
-              <div class="log-meta">${session.items.length} item(s)</div>
+              <div class="log-meta">${item.meal_name || "Meal"}</div>
+              <div class="log-meta">${item.quantity_note || "-"}</div>
             </div>
-            <div class="kcal-badge">${session.total_calories.toFixed(0)} kcal</div>
+            <div class="kcal-badge">${Number(item.calories || 0).toFixed(0)} kcal</div>
           </div>
 
-          <div class="macro-row" style="margin-bottom: 12px;">
-            <div class="macro-chip">P ${session.total_protein_g.toFixed(1)} g</div>
-            <div class="macro-chip">C ${session.total_carbs_g.toFixed(1)} g</div>
-            <div class="macro-chip">F ${session.total_fat_g.toFixed(1)} g</div>
+          <div class="macro-row">
+            <div class="macro-chip">P ${Number(item.protein_g || 0).toFixed(1)} g</div>
+            <div class="macro-chip">C ${Number(item.carbs_g || 0).toFixed(1)} g</div>
+            <div class="macro-chip">F ${Number(item.fat_g || 0).toFixed(1)} g</div>
           </div>
 
-          <div>
-            ${session.items
-  .map(item => `
-    <div class="draft-item" style="margin-bottom: 10px;">
-      <div class="draft-item-top">
-        <div>
-          <div class="draft-food-name">${item.food_name || "-"}</div>
-          <div class="draft-quantity">${item.quantity_note || "-"}</div>
-        </div>
-        <div class="kcal-badge">${Number(item.calories || 0).toFixed(0)} kcal</div>
-      </div>
-
-      <div class="macro-row">
-        <div class="macro-chip">P ${Number(item.protein_g || 0).toFixed(1)} g</div>
-        <div class="macro-chip">C ${Number(item.carbs_g || 0).toFixed(1)} g</div>
-        <div class="macro-chip">F ${Number(item.fat_g || 0).toFixed(1)} g</div>
-      </div>
-
-     <div class="actions" style="margin-top: 10px;">
-        <button class="btn btn-primary" onclick='openEditModalById("${item.log_id}")'>Edit</button>
-        <button class="btn btn-danger-soft" onclick='deleteLog("${item.log_id}")'>Delete</button>
-      </div>
-    </div>
-  `)
-  .join("")}
+          <div class="actions" style="margin-top: 10px;">
+            <button class="btn btn-primary" onclick='openEditModalById("${item.log_id}")'>Edit</button>
+            <button class="btn btn-danger-soft" onclick='deleteLog("${item.log_id}")'>Delete</button>
           </div>
         </div>
       `)
       .join("");
+
+    pageLabel.textContent = `Page ${logsCurrentPage} / ${totalPages}`;
+    prevBtn.disabled = logsCurrentPage <= 1;
+    nextBtn.disabled = logsCurrentPage >= totalPages;
   } catch (error) {
     console.error("LOAD LOGS ERROR:", error);
     container.innerHTML = `<div class="draft-empty">Gagal memuat logs.<br>${error.message}</div>`;
+    pageLabel.textContent = `Page -`;
+    prevBtn.disabled = true;
+    nextBtn.disabled = true;
   }
 }
 
@@ -837,6 +984,9 @@ async function loadAnalytics() {
   const weeklyContainer = document.getElementById("weekly-summary-container");
   const monthlyContainer = document.getElementById("monthly-summary-container");
 
+  analyticsDailyOffset = 0;
+  analyticsWeeklyOffset = 0;
+
   dailyContainer.innerHTML = `<div class="draft-empty">Loading daily summary...</div>`;
   weeklyContainer.innerHTML = `<div class="draft-empty">Loading weekly summary...</div>`;
   monthlyContainer.innerHTML = `<div class="draft-empty">Loading monthly summary...</div>`;
@@ -906,31 +1056,12 @@ setProgressBar("progress-protein", todayProtein, targetProtein);
 setProgressBar("progress-carbs", todayCarbs, targetCarbs);
 setProgressBar("progress-fat", todayFat, targetFat);
 
-    const recentDaily = [...dailyData].reverse().slice(0, 10);
+analyticsDailyDataCache = dailyData;
+analyticsWeeklyDataCache = weeklyData;
+analyticsMonthlyDataCache = monthlyData;
 
-    dailyContainer.innerHTML = recentDaily.length
-      ? recentDaily
-          .map(day => `
-            <div class="day-card">
-              <div class="log-card-top">
-                <div>
-                  <div class="log-title">${normalizeDate(day.date)}</div>
-                  <div class="log-meta">
-                    ${day.meal_count || 0} meals • ${day.food_count || 0} foods
-                  </div>
-                </div>
-                <div class="kcal-badge">${Number(day.total_calories || 0).toFixed(0)} kcal</div>
-              </div>
-
-              <div class="macro-row">
-                <div class="macro-chip">P ${Number(day.total_protein_g || 0).toFixed(1)} g</div>
-                <div class="macro-chip">C ${Number(day.total_carbs_g || 0).toFixed(1)} g</div>
-                <div class="macro-chip">F ${Number(day.total_fat_g || 0).toFixed(1)} g</div>
-              </div>
-            </div>
-          `)
-          .join("")
-      : `<div class="draft-empty">No daily summary yet.</div>`;
+renderDailySummary();
+renderWeeklySummary();
 
     const recentWeekly = [...weeklyData].slice(0, 8);
 
@@ -997,7 +1128,10 @@ document.getElementById("reset-btn").addEventListener("click", resetDraft);
 
 document.getElementById("refresh-logs-btn").addEventListener("click", loadLogs);
 document.getElementById("refresh-analytics-btn").addEventListener("click", loadAnalytics);
-document.getElementById("logs-filter-date").addEventListener("change", loadLogs);
+document.getElementById("logs-filter-date").addEventListener("change", () => {
+  logsCurrentPage = 1;
+  loadLogs();
+});
 
 document.getElementById("close-edit-modal").addEventListener("click", closeEditModal);
 document.getElementById("save-edit-btn").addEventListener("click", saveEditedLog);
@@ -1027,6 +1161,42 @@ document.getElementById("save-btn-manual").addEventListener("click", async () =>
   currentDraft = manualDraft;
   renderDraft();
   await saveFinal();
+});
+
+document.getElementById("logs-prev-btn").addEventListener("click", () => {
+  if (logsCurrentPage > 1) {
+    logsCurrentPage--;
+    loadLogs();
+  }
+});
+
+document.getElementById("logs-next-btn").addEventListener("click", () => {
+  logsCurrentPage++;
+  loadLogs();
+});
+
+document.getElementById("daily-prev-btn").addEventListener("click", () => {
+  analyticsDailyOffset++;
+  renderDailySummary();
+});
+
+document.getElementById("daily-next-btn").addEventListener("click", () => {
+  if (analyticsDailyOffset > 0) {
+    analyticsDailyOffset--;
+    renderDailySummary();
+  }
+});
+
+document.getElementById("weekly-prev-btn").addEventListener("click", () => {
+  analyticsWeeklyOffset++;
+  renderWeeklySummary();
+});
+
+document.getElementById("weekly-next-btn").addEventListener("click", () => {
+  if (analyticsWeeklyOffset > 0) {
+    analyticsWeeklyOffset--;
+    renderWeeklySummary();
+  }
 });
 
 document.getElementById("reset-manual-btn").addEventListener("click", () => {
