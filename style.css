@@ -579,3 +579,37 @@ textarea {
 .progress-over {
   background: linear-gradient(90deg, #ff8a8a, #ff4d6d) !important;
 }
+
+.section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.pager-controls,
+.pagination-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.pager-label {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: bold;
+}
+
+.pagination-bar {
+  margin-top: 14px;
+  justify-content: center;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
