@@ -8,22 +8,37 @@
 <meta name="theme-color" content="#ff5ca8">
 <link rel="apple-touch-icon" href="./assets/favicon.png">
   <link rel="icon" href="./assets/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="app-shell">
     <header class="app-header">
-      <div>
-        <h1>🍱Cala's Food Diary</h1>
-        <p id="datetime"></p>
-      </div>
-    </header>
+  <div class="brand-wrap">
+    <div class="brand-badge">🍱</div>
+    <div class="brand-text">
+      <h1 class="brand-title">Cala’s Food Diary</h1>
+      <p id="datetime" class="brand-date"></p>
+    </div>
+  </div>
+</header>
 
-    <nav class="top-nav">
-      <button class="nav-btn active" data-screen="chat">💬 Chat</button>
-      <button class="nav-btn" data-screen="logs">📜 Logs</button>
-      <button class="nav-btn" data-screen="analytics">📊 Analytics</button>
-    </nav>
+   <nav class="top-nav">
+  <button class="nav-btn active" data-screen="chat">
+    <span class="nav-icon">💬</span>
+    <span class="nav-text">Chat</span>
+  </button>
+  <button class="nav-btn" data-screen="logs">
+    <span class="nav-icon">📜</span>
+    <span class="nav-text">Logs</span>
+  </button>
+  <button class="nav-btn" data-screen="analytics">
+    <span class="nav-icon">📊</span>
+    <span class="nav-text">Analytics</span>
+  </button>
+</nav>
 
     <!-- CHAT SCREEN -->
     <main id="screen-chat" class="screen active">
