@@ -1103,17 +1103,30 @@ renderWeeklySummary();
 
 document.getElementById("send-btn")?.addEventListener("click", sendMessage);
 document.getElementById("reset-btn")?.addEventListener("click", resetDraft);
-document.getElementById("save-btn-manual")?.addEventListener("click", async () => {
-  const manualDraft = buildManualDraftFromForm();
+document.getElementById("save-btn")?.addEventListener("click", async () => {
+  try {
+    if (inputMode === "manual") {
+      const manualDraft = buildManualDraftFromForm();
 
-  if (!manualDraft) {
-    showToast("Insert at least 1 item before saving.", "error");
-    return;
+      if (!manualDraft) {
+        showToast("Insert at least 1 item before saving.", "error");
+        return;
+      }
+
+      currentDraft = manualDraft;
+      renderDraft();
+    } else {
+      if (!currentDraft || !currentDraft.items || currentDraft.items.length === 0) {
+        showToast("No AI draft to save yet.", "error");
+        return;
+      }
+    }
+
+    await saveFinal();
+  } catch (error) {
+    console.error("SAVE BUTTON ERROR:", error);
+    showToast(`Failed to save: ${error.message}`, "error");
   }
-
-  currentDraft = manualDraft;
-  renderDraft();
-  await saveFinal();
 });
 
 document.getElementById("refresh-logs-btn").addEventListener("click", loadLogs);
