@@ -263,6 +263,33 @@ function showToast(message, type = "info") {
   }, 3000);
 }
 
+// Tambahkan function ini
+function getWeekDateRange(weekKey) {
+  // weekKey format: "2026-W20"
+  const [year, week] = weekKey.split('-W');
+  const yearNum = parseInt(year);
+  const weekNum = parseInt(week);
+
+  // Hitung tanggal awal minggu (Senin)
+  const jan4 = new Date(yearNum, 0, 4);
+  const dayOfWeek = jan4.getDay() || 7; // 1=Senin, 7=Minggu
+  const weekOneStart = new Date(jan4);
+  weekOneStart.setDate(jan4.getDate() - (dayOfWeek - 1));
+
+  const startDate = new Date(weekOneStart);
+  startDate.setDate(weekOneStart.getDate() + (weekNum - 1) * 7);
+
+  const endDate = new Date(startDate);
+  endDate.setDate(startDate.getDate() + 6);
+
+  // Format: "1 Apr 2026 - 7 Apr 2026"
+  const options = { day: 'numeric', month: 'short', year: 'numeric' };
+  const start = startDate.toLocaleDateString('en-GB', options);
+  const end = endDate.toLocaleDateString('en-GB', options);
+
+  return `${start} - ${end}`;
+}
+
 function setProgressBar(id, value, target) {
   const el = document.getElementById(id);
   if (!el) return;
@@ -455,26 +482,9 @@ function renderDailySummary() {
 }
 
 function renderWeeklySummary() {
-  const weeklyContainer = document.getElementById("weekly-summary-container");
-  const label = document.getElementById("weekly-range-label");
-  const prevBtn = document.getElementById("weekly-prev-btn");
-  const nextBtn = document.getElementById("weekly-next-btn");
-
-  const sortedWeekly = sortWeeklyData(analyticsWeeklyDataCache);
-  const pageSize = 4;
-  const total = sortedWeekly.length;
-
-  const slice = getPagedSliceFromEnd(sortedWeekly, pageSize, analyticsWeeklyOffset);
-
-  if (!slice.length) {
-    weeklyContainer.innerHTML = `<div class="draft-empty">No weekly summary yet.</div>`;
-    label.textContent = "-";
-    prevBtn.disabled = true;
-    nextBtn.disabled = analyticsWeeklyOffset === 0;
-    return;
-  }
-
-  label.textContent = `${slice[0].week_key || "-"} → ${slice[slice.length - 1].week_key || "-"}`;
+  // ... kode sebelumnya ...
+  
+  label.textContent = `${getWeekDateRange(slice[0].week_key)} → ${getWeekDateRange(slice[slice.length - 1].week_key)}`;
 
   weeklyContainer.innerHTML = slice
     .slice()
@@ -484,6 +494,7 @@ function renderWeeklySummary() {
         <div class="log-card-top">
           <div>
             <div class="log-title">${week.week_key || "-"}</div>
+            <div class="log-meta">${getWeekDateRange(week.week_key)}</div>
             <div class="log-meta">${week.days_logged || 0} days logged</div>
           </div>
           <div class="kcal-badge">${Number(week.avg_daily_calories || 0).toFixed(0)} avg kcal</div>
