@@ -482,9 +482,41 @@ function renderDailySummary() {
 }
 
 function renderWeeklySummary() {
-  // ... kode sebelumnya ...
+  const weeklyContainer = document.getElementById("weekly-summary-container");
+  const label = document.getElementById("weekly-range-label");
+  const prevBtn = document.getElementById("weekly-prev-btn");
+  const nextBtn = document.getElementById("weekly-next-btn");
+
+  console.log("[DEBUG] renderWeeklySummary - analyticsWeeklyDataCache:", analyticsWeeklyDataCache);
+
+  const sortedWeekly = sortWeeklyData(analyticsWeeklyDataCache);
+  const pageSize = 4;
+  const total = sortedWeekly.length;
+
+  console.log("[DEBUG] sortedWeekly:", sortedWeekly);
+  console.log("[DEBUG] total:", total, "pageSize:", pageSize, "offset:", analyticsWeeklyOffset);
+
+  const slice = getPagedSliceFromEnd(sortedWeekly, pageSize, analyticsWeeklyOffset);
+
+  console.log("[DEBUG] slice:", slice);
+
+  if (!slice.length) {
+    console.log("[DEBUG] No weekly data to render");
+    weeklyContainer.innerHTML = `<div class="draft-empty">No weekly summary yet.</div>`;
+    label.textContent = "-";
+    prevBtn.disabled = true;
+    nextBtn.disabled = analyticsWeeklyOffset === 0;
+    return;
+  }
+
+  // Update label dengan date range
+  const firstWeek = slice[0];
+  const lastWeek = slice[slice.length - 1];
   
-  label.textContent = `${getWeekDateRange(slice[0].week_key)} → ${getWeekDateRange(slice[slice.length - 1].week_key)}`;
+  const firstRange = `${firstWeek.week_start_date || firstWeek.week_key || "-"} - ${firstWeek.week_end_date || "-"}`;
+  const lastRange = `${lastWeek.week_start_date || lastWeek.week_key || "-"} - ${lastWeek.week_end_date || "-"}`;
+  
+  label.textContent = `${firstRange} → ${lastRange}`;
 
   weeklyContainer.innerHTML = slice
     .slice()
@@ -494,7 +526,7 @@ function renderWeeklySummary() {
         <div class="log-card-top">
           <div>
             <div class="log-title">${week.week_key || "-"}</div>
-            <div class="log-meta">${getWeekDateRange(week.week_key)}</div>
+            <div class="log-meta">${week.week_start_date || "-"} to ${week.week_end_date || "-"}</div>
             <div class="log-meta">${week.days_logged || 0} days logged</div>
           </div>
           <div class="kcal-badge">${Number(week.avg_daily_calories || 0).toFixed(0)} avg kcal</div>
@@ -1010,77 +1042,90 @@ async function loadAnalytics() {
   monthlyContainer.innerHTML = `<div class="draft-empty">Loading monthly summary...</div>`;
 
   try {
-   const dailyData = await fetchSheetData("daily_summary");
-  const weeklyData = await fetchSheetData("weekly_summary");
-  const monthlyData = await fetchSheetData("monthly_summary");
-  const targetsData = await fetchSheetData("targets");
+    console.log("[DEBUG] Starting loadAnalytics...");
+    
+    const dailyData = await fetchSheetData("daily_summary");
+    console.log("[DEBUG] Daily data:", dailyData);
+    
+    const weeklyData = await fetchSheetData("weekly_summary");
+    console.log("[DEBUG] Weekly data:", weeklyData);
+    
+    const monthlyData = await fetchSheetData("monthly_summary");
+    console.log("[DEBUG] Monthly data:", monthlyData);
+    
+    const targetsData = await fetchSheetData("targets");
+    console.log("[DEBUG] Targets data:", targetsData);
 
-renderAnalyticsCharts(dailyData);
+    renderAnalyticsCharts(dailyData);
 
-  const today = formatToday();
-const todayRow = dailyData.find(row => normalizeDate(row.date) === today);
+    const today = formatToday();
+    const todayRow = dailyData.find(row => normalizeDate(row.date) === today);
 
-const targetsRow = targetsData && targetsData.length > 0 ? targetsData[0] : null;
+    const targetsRow = targetsData && targetsData.length > 0 ? targetsData[0] : null;
 
-const todayCalories = Number(todayRow?.total_calories || 0);
-const todayProtein = Number(todayRow?.total_protein_g || 0);
-const todayCarbs = Number(todayRow?.total_carbs_g || 0);
-const todayFat = Number(todayRow?.total_fat_g || 0);
+    const todayCalories = Number(todayRow?.total_calories || 0);
+    const todayProtein = Number(todayRow?.total_protein_g || 0);
+    const todayCarbs = Number(todayRow?.total_carbs_g || 0);
+    const todayFat = Number(todayRow?.total_fat_g || 0);
 
-const targetCalories = Number(todayRow?.calorie_target || targetsRow?.calorie_target || 0);
-const targetProtein = Number(todayRow?.protein_target || targetsRow?.protein_target || 0);
-const targetCarbs = Number(todayRow?.carbs_target || targetsRow?.carbs_target || 0);
-const targetFat = Number(todayRow?.fat_target || targetsRow?.fat_target || 0);
+    const targetCalories = Number(todayRow?.calorie_target || targetsRow?.calorie_target || 0);
+    const targetProtein = Number(todayRow?.protein_target || targetsRow?.protein_target || 0);
+    const targetCarbs = Number(todayRow?.carbs_target || targetsRow?.carbs_target || 0);
+    const targetFat = Number(todayRow?.fat_target || targetsRow?.fat_target || 0);
 
-document.getElementById("analytics-today-calories").textContent =
-  `${todayCalories.toFixed(0)} / ${targetCalories.toFixed(0)} kcal`;
+    document.getElementById("analytics-today-calories").textContent =
+      `${todayCalories.toFixed(0)} / ${targetCalories.toFixed(0)} kcal`;
 
-document.getElementById("analytics-today-protein").textContent =
-  `${todayProtein.toFixed(1)} / ${targetProtein.toFixed(1)} g`;
+    document.getElementById("analytics-today-protein").textContent =
+      `${todayProtein.toFixed(1)} / ${targetProtein.toFixed(1)} g`;
 
-document.getElementById("analytics-today-carbs").textContent =
-  `${todayCarbs.toFixed(1)} / ${targetCarbs.toFixed(1)} g`;
+    document.getElementById("analytics-today-carbs").textContent =
+      `${todayCarbs.toFixed(1)} / ${targetCarbs.toFixed(1)} g`;
 
-document.getElementById("analytics-today-fat").textContent =
-  `${todayFat.toFixed(1)} / ${targetFat.toFixed(1)} g`;
+    document.getElementById("analytics-today-fat").textContent =
+      `${todayFat.toFixed(1)} / ${targetFat.toFixed(1)} g`;
 
-const caloriesDiff = targetCalories - todayCalories;
-const proteinDiff = targetProtein - todayProtein;
-const carbsDiff = targetCarbs - todayCarbs;
-const fatDiff = targetFat - todayFat;
+    const caloriesDiff = targetCalories - todayCalories;
+    const proteinDiff = targetProtein - todayProtein;
+    const carbsDiff = targetCarbs - todayCarbs;
+    const fatDiff = targetFat - todayFat;
 
-document.getElementById("analytics-calories-remaining").textContent =
-  caloriesDiff >= 0
-    ? `Remaining: ${caloriesDiff.toFixed(0)} kcal`
-    : `Over by: ${Math.abs(caloriesDiff).toFixed(0)} kcal`;
+    document.getElementById("analytics-calories-remaining").textContent =
+      caloriesDiff >= 0
+        ? `Remaining: ${caloriesDiff.toFixed(0)} kcal`
+        : `Over by: ${Math.abs(caloriesDiff).toFixed(0)} kcal`;
 
-document.getElementById("analytics-protein-remaining").textContent =
-  proteinDiff >= 0
-    ? `Remaining: ${proteinDiff.toFixed(1)} g`
-    : `Over by: ${Math.abs(proteinDiff).toFixed(1)} g`;
+    document.getElementById("analytics-protein-remaining").textContent =
+      proteinDiff >= 0
+        ? `Remaining: ${proteinDiff.toFixed(1)} g`
+        : `Over by: ${Math.abs(proteinDiff).toFixed(1)} g`;
 
-document.getElementById("analytics-carbs-remaining").textContent =
-  carbsDiff >= 0
-    ? `Remaining: ${carbsDiff.toFixed(1)} g`
-    : `Over by: ${Math.abs(carbsDiff).toFixed(1)} g`;
+    document.getElementById("analytics-carbs-remaining").textContent =
+      carbsDiff >= 0
+        ? `Remaining: ${carbsDiff.toFixed(1)} g`
+        : `Over by: ${Math.abs(carbsDiff).toFixed(1)} g`;
 
-document.getElementById("analytics-fat-remaining").textContent =
-  fatDiff >= 0
-    ? `Remaining: ${fatDiff.toFixed(1)} g`
-    : `Over by: ${Math.abs(fatDiff).toFixed(1)} g`;
+    document.getElementById("analytics-fat-remaining").textContent =
+      fatDiff >= 0
+        ? `Remaining: ${fatDiff.toFixed(1)} g`
+        : `Over by: ${Math.abs(fatDiff).toFixed(1)} g`;
 
-setProgressBar("progress-calories", todayCalories, targetCalories);
-setProgressBar("progress-protein", todayProtein, targetProtein);
-setProgressBar("progress-carbs", todayCarbs, targetCarbs);
-setProgressBar("progress-fat", todayFat, targetFat);
+    setProgressBar("progress-calories", todayCalories, targetCalories);
+    setProgressBar("progress-protein", todayProtein, targetProtein);
+    setProgressBar("progress-carbs", todayCarbs, targetCarbs);
+    setProgressBar("progress-fat", todayFat, targetFat);
 
-analyticsDailyDataCache = dailyData;
-analyticsWeeklyDataCache = weeklyData;
-analyticsMonthlyDataCache = monthlyData;
+    analyticsDailyDataCache = dailyData;
+    analyticsWeeklyDataCache = weeklyData;
+    analyticsMonthlyDataCache = monthlyData;
 
-renderDailySummary();
-renderWeeklySummary();
+    console.log("[DEBUG] Calling renderDailySummary...");
+    renderDailySummary();
+    
+    console.log("[DEBUG] Calling renderWeeklySummary...");
+    renderWeeklySummary();
 
+    console.log("[DEBUG] Rendering monthly summary...");
     const recentMonthly = [...monthlyData].reverse().slice(0, 6);
 
     monthlyContainer.innerHTML = recentMonthly.length
@@ -1104,8 +1149,10 @@ renderWeeklySummary();
           `)
           .join("")
       : `<div class="draft-empty">No monthly summary yet.</div>`;
+      
+    console.log("[DEBUG] loadAnalytics completed successfully");
   } catch (error) {
-    console.error("LOAD ANALYTICS ERROR:", error);
+    console.error("[DEBUG] LOAD ANALYTICS ERROR:", error);
     dailyContainer.innerHTML = `<div class="draft-empty">Failed to load daily summary.<br>${error.message}</div>`;
     weeklyContainer.innerHTML = `<div class="draft-empty">Failed to load weekly summary.<br>${error.message}</div>`;
     monthlyContainer.innerHTML = `<div class="draft-empty">Failed to load monthly summary.<br>${error.message}</div>`;
