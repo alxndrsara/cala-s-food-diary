@@ -1136,7 +1136,12 @@ async function loadAnalytics() {
             <div class="month-card">
               <div class="log-card-top">
                 <div>
-                  <div class="log-title">${month.month_key || "-"}</div>
+                  const label = new Date(month.month_key + "-01")
+  .toLocaleDateString("en-US", {
+    month: "long",
+    year: "numeric"
+  });
+  <div class="log-title">${label}</div>
                   <div class="log-meta">${month.days_logged || 0} days logged</div>
                 </div>
                 <div class="kcal-badge">${Number(month.avg_daily_calories || 0).toFixed(0)} avg kcal</div>
