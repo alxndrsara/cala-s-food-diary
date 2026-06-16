@@ -1126,7 +1126,9 @@ async function loadAnalytics() {
     renderWeeklySummary();
 
     console.log("[DEBUG] Rendering monthly summary...");
-    const recentMonthly = [...monthlyData].reverse().slice(0, 6);
+    const recentMonthly = [...monthlyData]
+  .sort((a, b) => String(b.month_key).localeCompare(String(a.month_key)))
+  .slice(0, 6);
 
     monthlyContainer.innerHTML = recentMonthly.length
       ? recentMonthly
