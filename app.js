@@ -7,8 +7,8 @@ let inputMode = "ai";
 let logsCurrentPage = 1;
 const LOGS_PER_PAGE = 12;
 
-let analyticsDailyOffset = 0;   // 0 = latest 7 days
-let analyticsWeeklyOffset = 0;  // 0 = latest 4 weeks
+let analyticsDailyOffset = 0;
+let analyticsWeeklyOffset = 0;
 
 let analyticsDailyDataCache = [];
 let analyticsWeeklyDataCache = [];
@@ -31,7 +31,6 @@ function formatMealNameFromDateTime(date, time) {
 
 function updateDateTime() {
   const now = new Date();
-
   const options = {
     weekday: 'long',
     day: 'numeric',
@@ -40,7 +39,6 @@ function updateDateTime() {
     hour: '2-digit',
     minute: '2-digit'
   };
-
   const formatted = now.toLocaleString('en-GB', options);
   document.getElementById('datetime').textContent = formatted;
 }
@@ -48,16 +46,11 @@ function updateDateTime() {
 updateDateTime();
 setInterval(updateDateTime, 1000);
 
-
 function normalizeDate(value) {
   if (!value) return "";
-
-  // Kalau sudah format YYYY-MM-DD
   if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value.trim())) {
     return value.trim();
   }
-
-  // Kalau format M/D/YYYY atau MM/DD/YYYY
   if (typeof value === "string" && value.includes("/")) {
     const parts = value.trim().split("/");
     if (parts.length === 3) {
@@ -67,8 +60,6 @@ function normalizeDate(value) {
       return `${year}-${month}-${day}`;
     }
   }
-
-  // Kalau Date object / string lain yang bisa diparse
   const d = new Date(value);
   if (!isNaN(d)) {
     const year = d.getFullYear();
@@ -76,7 +67,6 @@ function normalizeDate(value) {
     const day = String(d.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
   }
-
   return String(value).trim();
 }
 
@@ -87,11 +77,9 @@ function switchScreen(screenName) {
   document.querySelectorAll(".screen").forEach(screen => {
     screen.classList.remove("active");
   });
-
   document.querySelectorAll(".nav-btn").forEach(btn => {
     btn.classList.remove("active");
   });
-
   document.getElementById(`screen-${screenName}`).classList.add("active");
   document.querySelector(`.nav-btn[data-screen="${screenName}"]`).classList.add("active");
 }
@@ -100,11 +88,9 @@ document.querySelectorAll(".nav-btn").forEach(btn => {
   btn.addEventListener("click", async () => {
     const screen = btn.dataset.screen;
     switchScreen(screen);
-
     if (screen === "logs") {
       await loadLogs();
     }
-
     if (screen === "analytics") {
       await loadAnalytics();
     }
@@ -113,12 +99,10 @@ document.querySelectorAll(".nav-btn").forEach(btn => {
 
 function switchInputMode(mode) {
   inputMode = mode;
-
   const aiPanel = document.getElementById("ai-mode-panel");
   const manualPanel = document.getElementById("manual-mode-panel");
   const aiBtn = document.getElementById("mode-ai-btn");
   const manualBtn = document.getElementById("mode-manual-btn");
-
   if (mode === "ai") {
     aiPanel.classList.remove("hidden");
     manualPanel.classList.add("hidden");
@@ -135,7 +119,6 @@ function switchInputMode(mode) {
 function buildManualDraftFromForm() {
   const manualRows = document.querySelectorAll("#manual-items-container [data-manual-item]");
   const items = [];
-
   manualRows.forEach((row) => {
     const foodName = row.querySelector(".manual-food-name")?.value.trim() || "";
     const quantityNote = row.querySelector(".manual-quantity-note")?.value.trim() || "";
@@ -143,23 +126,11 @@ function buildManualDraftFromForm() {
     const protein = Number(row.querySelector(".manual-protein")?.value || 0);
     const carbs = Number(row.querySelector(".manual-carbs")?.value || 0);
     const fat = Number(row.querySelector(".manual-fat")?.value || 0);
-
     if (foodName) {
-      items.push({
-        food_name: foodName,
-        quantity_note: quantityNote,
-        calories,
-        protein_g: protein,
-        carbs_g: carbs,
-        fat_g: fat
-      });
+      items.push({ food_name: foodName, quantity_note: quantityNote, calories, protein_g: protein, carbs_g: carbs, fat_g: fat });
     }
   });
-
-  if (!items.length) {
-  return null;
-}
-
+  if (!items.length) return null;
   const total = items.reduce(
     (acc, item) => {
       acc.calories += Number(item.calories || 0);
@@ -168,31 +139,19 @@ function buildManualDraftFromForm() {
       acc.fat_g += Number(item.fat_g || 0);
       return acc;
     },
-    {
-      calories: 0,
-      protein_g: 0,
-      carbs_g: 0,
-      fat_g: 0
-    }
+    { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0 }
   );
-
-  return {
-    items,
-    total
-  };
+  return { items, total };
 }
 
 function autoPreviewManualEntry() {
   if (inputMode !== "manual") return;
-
   const manualDraft = buildManualDraftFromForm();
-
   if (!manualDraft) {
     currentDraft = null;
     renderDraft();
     return;
   }
-
   currentDraft = manualDraft;
   renderDraft();
 }
@@ -200,7 +159,6 @@ function autoPreviewManualEntry() {
 function previewManualEntry() {
   const manualDraft = buildManualDraftFromForm();
   if (!manualDraft) return;
-
   currentDraft = manualDraft;
   renderDraft();
 }
@@ -213,105 +171,48 @@ function addMessage(role, text) {
   const chatBox = document.getElementById("chat-box");
   const div = document.createElement("div");
   div.className = `message ${role}`;
-
   const avatar = role === "user" ? "C" : "🤖";
-
   div.innerHTML = `
     <div class="message-avatar">${avatar}</div>
     <div class="message-bubble">${String(text || "").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
   `;
-
   chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
 }
 
 function extractJson(text) {
-  const cleaned = text
-    .replace(/```json/g, "")
-    .replace(/```/g, "")
-    .trim();
-
+  const cleaned = text.replace(/```json/g, "").replace(/```/g, "").trim();
   const firstBrace = cleaned.indexOf("{");
   const lastBrace = cleaned.lastIndexOf("}");
-
-  if (firstBrace === -1 || lastBrace === -1) {
-    throw new Error("No JSON object found in model response");
-  }
-
-  const jsonString = cleaned.slice(firstBrace, lastBrace + 1);
-  return JSON.parse(jsonString);
+  if (firstBrace === -1 || lastBrace === -1) throw new Error("No JSON object found in model response");
+  return JSON.parse(cleaned.slice(firstBrace, lastBrace + 1));
 }
 
 function showToast(message, type = "info") {
   const container = document.getElementById("toast-container");
   if (!container) return;
-
   const toast = document.createElement("div");
   toast.className = `toast ${type}`;
   toast.textContent = message;
-
   container.appendChild(toast);
-
   setTimeout(() => {
     toast.style.opacity = "0";
     toast.style.transform = "translateY(-6px)";
     toast.style.transition = "0.2s ease";
   }, 2600);
-
-  setTimeout(() => {
-    toast.remove();
-  }, 3000);
-}
-
-// Tambahkan function ini
-function getWeekDateRange(weekKey) {
-  // weekKey format: "2026-W20"
-  const [year, week] = weekKey.split('-W');
-  const yearNum = parseInt(year);
-  const weekNum = parseInt(week);
-
-  // Hitung tanggal awal minggu (Senin)
-  const jan4 = new Date(yearNum, 0, 4);
-  const dayOfWeek = jan4.getDay() || 7; // 1=Senin, 7=Minggu
-  const weekOneStart = new Date(jan4);
-  weekOneStart.setDate(jan4.getDate() - (dayOfWeek - 1));
-
-  const startDate = new Date(weekOneStart);
-  startDate.setDate(weekOneStart.getDate() + (weekNum - 1) * 7);
-
-  const endDate = new Date(startDate);
-  endDate.setDate(startDate.getDate() + 6);
-
-  // Format: "1 Apr 2026 - 7 Apr 2026"
-  const options = { day: 'numeric', month: 'short', year: 'numeric' };
-  const start = startDate.toLocaleDateString('en-GB', options);
-  const end = endDate.toLocaleDateString('en-GB', options);
-
-  return `${start} - ${end}`;
+  setTimeout(() => toast.remove(), 3000);
 }
 
 function setProgressBar(id, value, target) {
   const el = document.getElementById(id);
   if (!el) return;
-
   const safeTarget = Number(target || 0);
   const safeValue = Number(value || 0);
-
   el.classList.remove("progress-over");
-
-  if (safeTarget <= 0) {
-    el.style.width = "0%";
-    return;
-  }
-
+  if (safeTarget <= 0) { el.style.width = "0%"; return; }
   const ratio = safeValue / safeTarget;
-  const percent = Math.min(ratio * 100, 100);
-
-  el.style.width = `${percent}%`;
-
-  if (ratio > 1) {
-    el.classList.add("progress-over");
-  }
+  el.style.width = `${Math.min(ratio * 100, 100)}%`;
+  if (ratio > 1) el.classList.add("progress-over");
 }
 
 function createManualItemHTML(index) {
@@ -321,37 +222,13 @@ function createManualItemHTML(index) {
         <h3>Item ${index + 1}</h3>
         <button type="button" class="manual-remove-btn" onclick="removeManualItem(this)">Remove</button>
       </div>
-
       <div class="manual-grid">
-        <label>
-          Food Name
-          <input type="text" class="manual-food-name" placeholder="i.e: Greek Yogurt" />
-        </label>
-
-        <label>
-          Quantity Note
-          <input type="text" class="manual-quantity-note" placeholder="i.e: 1 cup / 150 g / 1 bar" />
-        </label>
-
-        <label>
-          Calories
-          <input type="number" class="manual-calories" step="0.1" placeholder="0" />
-        </label>
-
-        <label>
-          Protein (g)
-          <input type="number" class="manual-protein" step="0.1" placeholder="0" />
-        </label>
-
-        <label>
-          Carbs (g)
-          <input type="number" class="manual-carbs" step="0.1" placeholder="0" />
-        </label>
-
-        <label>
-          Fat (g)
-          <input type="number" class="manual-fat" step="0.1" placeholder="0" />
-        </label>
+        <label>Food Name<input type="text" class="manual-food-name" placeholder="i.e: Greek Yogurt" /></label>
+        <label>Quantity Note<input type="text" class="manual-quantity-note" placeholder="i.e: 1 cup / 150 g / 1 bar" /></label>
+        <label>Calories<input type="number" class="manual-calories" step="0.1" placeholder="0" /></label>
+        <label>Protein (g)<input type="number" class="manual-protein" step="0.1" placeholder="0" /></label>
+        <label>Carbs (g)<input type="number" class="manual-carbs" step="0.1" placeholder="0" /></label>
+        <label>Fat (g)<input type="number" class="manual-fat" step="0.1" placeholder="0" /></label>
       </div>
     </div>
   `;
@@ -360,18 +237,15 @@ function createManualItemHTML(index) {
 function renderManualItems(count = 1) {
   const container = document.getElementById("manual-items-container");
   container.innerHTML = "";
-
   for (let i = 0; i < count; i++) {
     container.insertAdjacentHTML("beforeend", createManualItemHTML(i));
   }
-
   updateManualItemTitles();
 }
 
 function addManualItem() {
   const container = document.getElementById("manual-items-container");
   const currentCount = container.querySelectorAll("[data-manual-item]").length;
-
   container.insertAdjacentHTML("beforeend", createManualItemHTML(currentCount));
   updateManualItemTitles();
   autoPreviewManualEntry();
@@ -380,12 +254,7 @@ function addManualItem() {
 function removeManualItem(button) {
   const container = document.getElementById("manual-items-container");
   const allItems = container.querySelectorAll("[data-manual-item]");
-
-  if (allItems.length <= 1) {
-    alert("At least one item.");
-    return;
-  }
-
+  if (allItems.length <= 1) { alert("At least one item."); return; }
   button.closest("[data-manual-item]").remove();
   updateManualItemTitles();
   autoPreviewManualEntry();
@@ -393,42 +262,30 @@ function removeManualItem(button) {
 
 function updateManualItemTitles() {
   const items = document.querySelectorAll("#manual-items-container [data-manual-item]");
-
   items.forEach((item, index) => {
     const title = item.querySelector(".manual-item-head h3");
-    if (title) {
-      title.textContent = `Item ${index + 1}`;
-    }
+    if (title) title.textContent = `Item ${index + 1}`;
   });
 }
 
 function sortDailyData(data) {
   return [...data]
-    .map(row => ({
-      ...row,
-      normalized_date: normalizeDate(row.date)
-    }))
+    .map(row => ({ ...row, normalized_date: normalizeDate(row.date) }))
     .sort((a, b) => new Date(a.normalized_date) - new Date(b.normalized_date));
 }
 
 function sortWeeklyData(data) {
-  return [...data].sort((a, b) => {
-    const aKey = String(a.week_key || "");
-    const bKey = String(b.week_key || "");
-    return aKey.localeCompare(bKey);
-  });
+  return [...data].sort((a, b) => String(a.week_key || "").localeCompare(String(b.week_key || "")));
 }
 
 function getPagedSliceFromEnd(data, pageSize, offsetPages) {
-  const sorted = [...data];
-  const total = sorted.length;
-
+  const total = data.length;
   const end = total - (offsetPages * pageSize);
   const start = Math.max(0, end - pageSize);
-
-  return sorted.slice(start, Math.max(start, end));
+  return data.slice(start, Math.max(start, end));
 }
 
+// ✅ FIX 1: renderDailySummary — variable `label` dideklarasikan dengan benar di dalam map
 function renderDailySummary() {
   const dailyContainer = document.getElementById("daily-summary-container");
   const label = document.getElementById("daily-range-label");
@@ -438,7 +295,6 @@ function renderDailySummary() {
   const sortedDaily = sortDailyData(analyticsDailyDataCache);
   const pageSize = 7;
   const total = sortedDaily.length;
-
   const slice = getPagedSliceFromEnd(sortedDaily, pageSize, analyticsDailyOffset);
 
   if (!slice.length) {
@@ -461,13 +317,10 @@ function renderDailySummary() {
         <div class="log-card-top">
           <div>
             <div class="log-title">${day.normalized_date}</div>
-            <div class="log-meta">
-              ${day.meal_count || 0} meals • ${day.food_count || 0} foods
-            </div>
+            <div class="log-meta">${day.meal_count || 0} meals • ${day.food_count || 0} foods</div>
           </div>
           <div class="kcal-badge">${Number(day.total_calories || 0).toFixed(0)} kcal</div>
         </div>
-
         <div class="macro-row">
           <div class="macro-chip">P ${Number(day.total_protein_g || 0).toFixed(1)} g</div>
           <div class="macro-chip">C ${Number(day.total_carbs_g || 0).toFixed(1)} g</div>
@@ -481,27 +334,19 @@ function renderDailySummary() {
   nextBtn.disabled = analyticsDailyOffset === 0;
 }
 
+// ✅ FIX 2: renderWeeklySummary — variable `label` dideklarasikan dengan benar
 function renderWeeklySummary() {
   const weeklyContainer = document.getElementById("weekly-summary-container");
   const label = document.getElementById("weekly-range-label");
   const prevBtn = document.getElementById("weekly-prev-btn");
   const nextBtn = document.getElementById("weekly-next-btn");
 
-  console.log("[DEBUG] renderWeeklySummary - analyticsWeeklyDataCache:", analyticsWeeklyDataCache);
-
   const sortedWeekly = sortWeeklyData(analyticsWeeklyDataCache);
   const pageSize = 4;
   const total = sortedWeekly.length;
-
-  console.log("[DEBUG] sortedWeekly:", sortedWeekly);
-  console.log("[DEBUG] total:", total, "pageSize:", pageSize, "offset:", analyticsWeeklyOffset);
-
   const slice = getPagedSliceFromEnd(sortedWeekly, pageSize, analyticsWeeklyOffset);
 
-  console.log("[DEBUG] slice:", slice);
-
   if (!slice.length) {
-    console.log("[DEBUG] No weekly data to render");
     weeklyContainer.innerHTML = `<div class="draft-empty">No weekly summary yet.</div>`;
     label.textContent = "-";
     prevBtn.disabled = true;
@@ -509,14 +354,9 @@ function renderWeeklySummary() {
     return;
   }
 
-  // Update label dengan date range
   const firstWeek = slice[0];
   const lastWeek = slice[slice.length - 1];
-  
-  const firstRange = `${firstWeek.week_start_date || firstWeek.week_key || "-"} - ${firstWeek.week_end_date || "-"}`;
-  const lastRange = `${lastWeek.week_start_date || lastWeek.week_key || "-"} - ${lastWeek.week_end_date || "-"}`;
-  
-  label.textContent = `${firstRange} → ${lastRange}`;
+  label.textContent = `${firstWeek.week_start_date || firstWeek.week_key || "-"} → ${lastWeek.week_end_date || lastWeek.week_key || "-"}`;
 
   weeklyContainer.innerHTML = slice
     .slice()
@@ -531,22 +371,55 @@ function renderWeeklySummary() {
           </div>
           <div class="kcal-badge">${Number(week.avg_daily_calories || 0).toFixed(0)} avg kcal</div>
         </div>
-
         <div class="macro-row">
           <div class="macro-chip">Avg P ${Number(week.avg_daily_protein_g || 0).toFixed(1)} g</div>
           <div class="macro-chip">Avg C ${Number(week.avg_daily_carbs_g || 0).toFixed(1)} g</div>
           <div class="macro-chip">Avg F ${Number(week.avg_daily_fat_g || 0).toFixed(1)} g</div>
         </div>
-
-        <div class="log-meta" style="margin-top: 10px;">
-          Total: ${Number(week.total_calories || 0).toFixed(0)} kcal
-        </div>
+        <div class="log-meta" style="margin-top: 10px;">Total: ${Number(week.total_calories || 0).toFixed(0)} kcal</div>
       </div>
     `)
     .join("");
 
   prevBtn.disabled = (analyticsWeeklyOffset + 1) * pageSize >= total;
   nextBtn.disabled = analyticsWeeklyOffset === 0;
+}
+
+// ✅ FIX 3: renderMonthlySummary — dipisah jadi fungsi sendiri, JS code tidak nyasar ke template string
+function renderMonthlySummary() {
+  const monthlyContainer = document.getElementById("monthly-summary-container");
+  const recentMonthly = [...analyticsMonthlyDataCache]
+    .sort((a, b) => String(b.month_key).localeCompare(String(a.month_key)))
+    .slice(0, 6);
+
+  if (!recentMonthly.length) {
+    monthlyContainer.innerHTML = `<div class="draft-empty">No monthly summary yet.</div>`;
+    return;
+  }
+
+  monthlyContainer.innerHTML = recentMonthly
+    .map(month => {
+      const monthLabel = new Date(month.month_key + "-02")
+        .toLocaleDateString("en-US", { month: "long", year: "numeric" });
+      return `
+        <div class="month-card">
+          <div class="log-card-top">
+            <div>
+              <div class="log-title">${monthLabel}</div>
+              <div class="log-meta">${month.days_logged || 0} days logged</div>
+            </div>
+            <div class="kcal-badge">${Number(month.avg_daily_calories || 0).toFixed(0)} avg kcal</div>
+          </div>
+          <div class="macro-row">
+            <div class="macro-chip">Avg P ${Number(month.avg_daily_protein_g || 0).toFixed(1)} g</div>
+            <div class="macro-chip">Avg C ${Number(month.avg_daily_carbs_g || 0).toFixed(1)} g</div>
+            <div class="macro-chip">Avg F ${Number(month.avg_daily_fat_g || 0).toFixed(1)} g</div>
+          </div>
+          <div class="log-meta" style="margin-top: 10px;">Total: ${Number(month.total_calories || 0).toFixed(0)} kcal</div>
+        </div>
+      `;
+    })
+    .join("");
 }
 
 function renderDraft() {
@@ -556,14 +429,10 @@ function renderDraft() {
   const draftItems = document.getElementById("draft-items");
 
   if (!currentDraft || !currentDraft.items || currentDraft.items.length === 0) {
-    rawOutput.textContent = currentDraft
-      ? JSON.stringify(currentDraft, null, 2)
-      : "Belum ada draft.";
-
+    rawOutput.textContent = currentDraft ? JSON.stringify(currentDraft, null, 2) : "Belum ada draft.";
     draftEmpty.classList.remove("hidden");
     draftPretty.classList.add("hidden");
     draftItems.innerHTML = "";
-
     document.getElementById("total-calories").textContent = "0";
     document.getElementById("total-protein").textContent = "0 g";
     document.getElementById("total-carbs").textContent = "0 g";
@@ -576,7 +445,7 @@ function renderDraft() {
   draftPretty.classList.remove("hidden");
 
   draftItems.innerHTML = currentDraft.items
-    .map((item) => `
+    .map(item => `
       <div class="draft-item">
         <div class="draft-item-top">
           <div>
@@ -585,7 +454,6 @@ function renderDraft() {
           </div>
           <div class="kcal-badge">${Number(item.calories || 0).toFixed(0)} kcal</div>
         </div>
-
         <div class="macro-row">
           <div class="macro-chip">P ${Number(item.protein_g || 0).toFixed(1)} g</div>
           <div class="macro-chip">C ${Number(item.carbs_g || 0).toFixed(1)} g</div>
@@ -595,61 +463,33 @@ function renderDraft() {
     `)
     .join("");
 
-  document.getElementById("total-calories").textContent =
-    Number(currentDraft.total?.calories || 0).toFixed(0) + " kcal";
-
-  document.getElementById("total-protein").textContent =
-    Number(currentDraft.total?.protein_g || 0).toFixed(1) + " g";
-
-  document.getElementById("total-carbs").textContent =
-    Number(currentDraft.total?.carbs_g || 0).toFixed(1) + " g";
-
-  document.getElementById("total-fat").textContent =
-    Number(currentDraft.total?.fat_g || 0).toFixed(1) + " g";
+  document.getElementById("total-calories").textContent = Number(currentDraft.total?.calories || 0).toFixed(0) + " kcal";
+  document.getElementById("total-protein").textContent = Number(currentDraft.total?.protein_g || 0).toFixed(1) + " g";
+  document.getElementById("total-carbs").textContent = Number(currentDraft.total?.carbs_g || 0).toFixed(1) + " g";
+  document.getElementById("total-fat").textContent = Number(currentDraft.total?.fat_g || 0).toFixed(1) + " g";
 }
 
 async function callAIFromAppsScript(userMessage) {
-  const payload = {
-    action: "ai_chat",
-    conversation,
-    user_message: userMessage
-  };
-
+  const payload = { action: "ai_chat", conversation, user_message: userMessage };
   const formData = new FormData();
   formData.append("payload", JSON.stringify(payload));
-
-  const response = await fetch(CONFIG.APPS_SCRIPT_URL, {
-    method: "POST",
-    body: formData
-  });
-
+  const response = await fetch(CONFIG.APPS_SCRIPT_URL, { method: "POST", body: formData });
   const result = await response.json();
-  console.log("AI via Apps Script response:", result);
-
-  if (!result.success) {
-    throw new Error(result.error || "AI request failed");
-  }
-
+  if (!result.success) throw new Error(result.error || "AI request failed");
   return result.data;
 }
 
 async function sendMessage() {
   const input = document.getElementById("user-input");
   const text = input.value.trim();
-
   if (!text) return;
-
   addMessage("user", text);
   conversation.push({ role: "user", text });
-
   input.value = "";
-
   try {
     const result = await callAIFromAppsScript(text);
-
     addMessage("ai", result.assistant_message);
     conversation.push({ role: "ai", text: result.assistant_message });
-
     currentDraft = result.session_state;
     renderDraft();
   } catch (error) {
@@ -667,43 +507,27 @@ async function saveFinal() {
     alert("No draft to save");
     return;
   }
-
   const date = document.getElementById("log-date").value;
   const time = document.getElementById("log-time").value;
   let mealName = document.getElementById("meal-name").value.trim();
-
   if (!mealName) {
     mealName = formatMealNameFromDateTime(date, time);
     document.getElementById("meal-name").value = mealName;
   }
-
   const payload = {
-  action: "append_food_items",
-  date,
-  time,
-  session_id: generateSessionId(),
-  meal_name: mealName,
-  source: inputMode === "manual" ? "manual" : "ai",
-  notes: inputMode === "manual"
-    ? "saved from manual entry"
-    : "saved from conversational AI",
-  items: currentDraft.items
-};
-
-  console.log("Saving payload to Apps Script:", payload);
-
+    action: "append_food_items",
+    date, time,
+    session_id: generateSessionId(),
+    meal_name: mealName,
+    source: inputMode === "manual" ? "manual" : "ai",
+    notes: inputMode === "manual" ? "saved from manual entry" : "saved from conversational AI",
+    items: currentDraft.items
+  };
   const formData = new FormData();
   formData.append("payload", JSON.stringify(payload));
-
   try {
-    const response = await fetch(CONFIG.APPS_SCRIPT_URL, {
-      method: "POST",
-      body: formData
-    });
-
+    const response = await fetch(CONFIG.APPS_SCRIPT_URL, { method: "POST", body: formData });
     const result = await response.json();
-    console.log("Apps Script save response:", result);
-
     if (result.success) {
       showToast(`Saved ${result.inserted} item.`, "success");
       resetDraft();
@@ -733,41 +557,23 @@ async function fetchSheetData(action) {
   const url = `${CONFIG.APPS_SCRIPT_URL}?action=${action}`;
   const response = await fetch(url);
   const result = await response.json();
-
-  if (!result.success) {
-    throw new Error(result.error || `Failed to fetch ${action}`);
-  }
-
+  if (!result.success) throw new Error(result.error || `Failed to fetch ${action}`);
   return result.data || [];
 }
 
 function groupLogsBySession(logs) {
   const grouped = {};
-
   logs.forEach(log => {
     const sessionId = log.session_id || `no_session_${log.date}_${log.time}`;
-
     if (!grouped[sessionId]) {
-      grouped[sessionId] = {
-        session_id: sessionId,
-        date: log.date,
-        time: log.time,
-        meal_name: log.meal_name,
-        items: [],
-        total_calories: 0,
-        total_protein_g: 0,
-        total_carbs_g: 0,
-        total_fat_g: 0
-      };
+      grouped[sessionId] = { session_id: sessionId, date: log.date, time: log.time, meal_name: log.meal_name, items: [], total_calories: 0, total_protein_g: 0, total_carbs_g: 0, total_fat_g: 0 };
     }
-
     grouped[sessionId].items.push(log);
     grouped[sessionId].total_calories += Number(log.calories || 0);
     grouped[sessionId].total_protein_g += Number(log.protein_g || 0);
     grouped[sessionId].total_carbs_g += Number(log.carbs_g || 0);
     grouped[sessionId].total_fat_g += Number(log.fat_g || 0);
   });
-
   return Object.values(grouped).reverse();
 }
 
@@ -783,27 +589,19 @@ async function loadLogs() {
   try {
     let logs = await fetchSheetData("logs");
     logsCache = logs;
-
     logs = [...logs].sort((a, b) => {
       const aDateTime = `${normalizeDate(a.date)} ${a.time || "00:00"}`;
       const bDateTime = `${normalizeDate(b.date)} ${b.time || "00:00"}`;
       return bDateTime.localeCompare(aDateTime);
     });
-
     if (filterDate) {
       logs = logs.filter(log => normalizeDate(log.date) === filterDate);
     }
-
     const totalLogs = logs.length;
     const totalPages = Math.max(1, Math.ceil(totalLogs / LOGS_PER_PAGE));
-
-    if (logsCurrentPage > totalPages) {
-      logsCurrentPage = totalPages;
-    }
-
+    if (logsCurrentPage > totalPages) logsCurrentPage = totalPages;
     const start = (logsCurrentPage - 1) * LOGS_PER_PAGE;
-    const end = start + LOGS_PER_PAGE;
-    const pageLogs = logs.slice(start, end);
+    const pageLogs = logs.slice(start, start + LOGS_PER_PAGE);
 
     if (!totalLogs) {
       container.innerHTML = `<div class="draft-empty">Belum ada data logs.</div>`;
@@ -819,21 +617,17 @@ async function loadLogs() {
           <div class="log-card-top">
             <div>
               <div class="log-title">${item.food_name || "-"}</div>
-              <div class="log-meta">
-                ${normalizeDate(item.date)} • ${item.time || "-"}
-              </div>
+              <div class="log-meta">${normalizeDate(item.date)} • ${item.time || "-"}</div>
               <div class="log-meta">${item.meal_name || "Meal"}</div>
               <div class="log-meta">${item.quantity_note || "-"}</div>
             </div>
             <div class="kcal-badge">${Number(item.calories || 0).toFixed(0)} kcal</div>
           </div>
-
           <div class="macro-row">
             <div class="macro-chip">P ${Number(item.protein_g || 0).toFixed(1)} g</div>
             <div class="macro-chip">C ${Number(item.carbs_g || 0).toFixed(1)} g</div>
             <div class="macro-chip">F ${Number(item.fat_g || 0).toFixed(1)} g</div>
           </div>
-
           <div class="actions" style="margin-top: 10px;">
             <button class="btn btn-primary" onclick='openEditModalById("${item.log_id}")'>Edit</button>
             <button class="btn btn-danger-soft" onclick='deleteLog("${item.log_id}")'>Delete</button>
@@ -857,7 +651,6 @@ async function loadLogs() {
 function openEditModalById(logId) {
   const item = logsCache.find(log => String(log.log_id) === String(logId));
   if (!item) return;
-
   document.getElementById("edit-log-id").value = item.log_id || "";
   document.getElementById("edit-food-name").value = item.food_name || "";
   document.getElementById("edit-quantity-note").value = item.quantity_note || "";
@@ -865,7 +658,6 @@ function openEditModalById(logId) {
   document.getElementById("edit-protein").value = item.protein_g || 0;
   document.getElementById("edit-carbs").value = item.carbs_g || 0;
   document.getElementById("edit-fat").value = item.fat_g || 0;
-
   document.getElementById("edit-modal").classList.remove("hidden");
 }
 
@@ -876,23 +668,12 @@ function closeEditModal() {
 async function deleteLog(logId) {
   const confirmed = confirm("Are you sure to delete this log?");
   if (!confirmed) return;
-
-  const payload = {
-    action: "delete_log",
-    log_id: logId
-  };
-
+  const payload = { action: "delete_log", log_id: logId };
   const formData = new FormData();
   formData.append("payload", JSON.stringify(payload));
-
   try {
-    const response = await fetch(CONFIG.APPS_SCRIPT_URL, {
-      method: "POST",
-      body: formData
-    });
-
+    const response = await fetch(CONFIG.APPS_SCRIPT_URL, { method: "POST", body: formData });
     const result = await response.json();
-
     if (result.success) {
       showToast("Log deleted.", "success");
       await loadLogs();
@@ -917,18 +698,11 @@ async function saveEditedLog() {
     carbs_g: Number(document.getElementById("edit-carbs").value || 0),
     fat_g: Number(document.getElementById("edit-fat").value || 0)
   };
-
   const formData = new FormData();
   formData.append("payload", JSON.stringify(payload));
-
   try {
-    const response = await fetch(CONFIG.APPS_SCRIPT_URL, {
-      method: "POST",
-      body: formData
-    });
-
+    const response = await fetch(CONFIG.APPS_SCRIPT_URL, { method: "POST", body: formData });
     const result = await response.json();
-
     if (result.success) {
       showToast("Log updated.", "success");
       closeEditModal();
@@ -945,10 +719,7 @@ async function saveEditedLog() {
 
 function renderAnalyticsCharts(dailyData) {
   const sortedDaily = [...dailyData]
-    .map(day => ({
-      ...day,
-      normalized_date: normalizeDate(day.date)
-    }))
+    .map(day => ({ ...day, normalized_date: normalizeDate(day.date) }))
     .sort((a, b) => new Date(a.normalized_date) - new Date(b.normalized_date))
     .slice(-7);
 
@@ -960,40 +731,18 @@ function renderAnalyticsCharts(dailyData) {
 
   const caloriesCanvas = document.getElementById("calories-chart");
   const macrosCanvas = document.getElementById("macros-chart");
-
   if (!caloriesCanvas || !macrosCanvas) return;
 
-  if (caloriesChart) {
-    caloriesChart.destroy();
-  }
-
-  if (macrosChart) {
-    macrosChart.destroy();
-  }
+  if (caloriesChart) caloriesChart.destroy();
+  if (macrosChart) macrosChart.destroy();
 
   caloriesChart = new Chart(caloriesCanvas, {
     type: "line",
     data: {
       labels,
-      datasets: [
-        {
-          label: "Calories",
-          data: calories,
-          borderColor: "#ff69b4",
-          backgroundColor: "rgba(255, 105, 180, 0.15)",
-          fill: true,
-          tension: 0.35
-        }
-      ]
+      datasets: [{ label: "Calories", data: calories, borderColor: "#ff69b4", backgroundColor: "rgba(255, 105, 180, 0.15)", fill: true, tension: 0.35 }]
     },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: {
-          display: true
-        }
-      }
-    }
+    options: { responsive: true, plugins: { legend: { display: true } } }
   });
 
   macrosChart = new Chart(macrosCanvas, {
@@ -1001,66 +750,46 @@ function renderAnalyticsCharts(dailyData) {
     data: {
       labels,
       datasets: [
-        {
-          label: "Protein",
-          data: protein,
-          backgroundColor: "#ff8fc7"
-        },
-        {
-          label: "Carbs",
-          data: carbs,
-          backgroundColor: "#c79bff"
-        },
-        {
-          label: "Fat",
-          data: fat,
-          backgroundColor: "#ffb86c"
-        }
+        { label: "Protein", data: protein, backgroundColor: "#ff8fc7" },
+        { label: "Carbs", data: carbs, backgroundColor: "#c79bff" },
+        { label: "Fat", data: fat, backgroundColor: "#ffb86c" }
       ]
     },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: {
-          display: true
-        }
-      }
-    }
+    options: { responsive: true, plugins: { legend: { display: true } } }
   });
 }
 
+// ✅ FIX 4: loadAnalytics — cache disi DULU, baru offset di-reset, baru render dipanggil
 async function loadAnalytics() {
   const dailyContainer = document.getElementById("daily-summary-container");
   const weeklyContainer = document.getElementById("weekly-summary-container");
   const monthlyContainer = document.getElementById("monthly-summary-container");
-
-  analyticsDailyOffset = 0;
-  analyticsWeeklyOffset = 0;
 
   dailyContainer.innerHTML = `<div class="draft-empty">Loading daily summary...</div>`;
   weeklyContainer.innerHTML = `<div class="draft-empty">Loading weekly summary...</div>`;
   monthlyContainer.innerHTML = `<div class="draft-empty">Loading monthly summary...</div>`;
 
   try {
-    console.log("[DEBUG] Starting loadAnalytics...");
-    
-    const dailyData = await fetchSheetData("daily_summary");
-    console.log("[DEBUG] Daily data:", dailyData);
-    
-    const weeklyData = await fetchSheetData("weekly_summary");
-    console.log("[DEBUG] Weekly data:", weeklyData);
-    
-    const monthlyData = await fetchSheetData("monthly_summary");
-    console.log("[DEBUG] Monthly data:", monthlyData);
-    
-    const targetsData = await fetchSheetData("targets");
-    console.log("[DEBUG] Targets data:", targetsData);
+    const [dailyData, weeklyData, monthlyData, targetsData] = await Promise.all([
+      fetchSheetData("daily_summary"),
+      fetchSheetData("weekly_summary"),
+      fetchSheetData("monthly_summary"),
+      fetchSheetData("targets")
+    ]);
+
+    // ✅ Cache diisi DULU sebelum render dipanggil
+    analyticsDailyDataCache = dailyData;
+    analyticsWeeklyDataCache = weeklyData;
+    analyticsMonthlyDataCache = monthlyData;
+
+    // ✅ Offset di-reset setelah cache terisi
+    analyticsDailyOffset = 0;
+    analyticsWeeklyOffset = 0;
 
     renderAnalyticsCharts(dailyData);
 
     const today = formatToday();
     const todayRow = dailyData.find(row => normalizeDate(row.date) === today);
-
     const targetsRow = targetsData && targetsData.length > 0 ? targetsData[0] : null;
 
     const todayCalories = Number(todayRow?.total_calories || 0);
@@ -1073,93 +802,33 @@ async function loadAnalytics() {
     const targetCarbs = Number(todayRow?.carbs_target || targetsRow?.carbs_target || 0);
     const targetFat = Number(todayRow?.fat_target || targetsRow?.fat_target || 0);
 
-    document.getElementById("analytics-today-calories").textContent =
-      `${todayCalories.toFixed(0)} / ${targetCalories.toFixed(0)} kcal`;
-
-    document.getElementById("analytics-today-protein").textContent =
-      `${todayProtein.toFixed(1)} / ${targetProtein.toFixed(1)} g`;
-
-    document.getElementById("analytics-today-carbs").textContent =
-      `${todayCarbs.toFixed(1)} / ${targetCarbs.toFixed(1)} g`;
-
-    document.getElementById("analytics-today-fat").textContent =
-      `${todayFat.toFixed(1)} / ${targetFat.toFixed(1)} g`;
+    document.getElementById("analytics-today-calories").textContent = `${todayCalories.toFixed(0)} / ${targetCalories.toFixed(0)} kcal`;
+    document.getElementById("analytics-today-protein").textContent = `${todayProtein.toFixed(1)} / ${targetProtein.toFixed(1)} g`;
+    document.getElementById("analytics-today-carbs").textContent = `${todayCarbs.toFixed(1)} / ${targetCarbs.toFixed(1)} g`;
+    document.getElementById("analytics-today-fat").textContent = `${todayFat.toFixed(1)} / ${targetFat.toFixed(1)} g`;
 
     const caloriesDiff = targetCalories - todayCalories;
     const proteinDiff = targetProtein - todayProtein;
     const carbsDiff = targetCarbs - todayCarbs;
     const fatDiff = targetFat - todayFat;
 
-    document.getElementById("analytics-calories-remaining").textContent =
-      caloriesDiff >= 0
-        ? `Remaining: ${caloriesDiff.toFixed(0)} kcal`
-        : `Over by: ${Math.abs(caloriesDiff).toFixed(0)} kcal`;
-
-    document.getElementById("analytics-protein-remaining").textContent =
-      proteinDiff >= 0
-        ? `Remaining: ${proteinDiff.toFixed(1)} g`
-        : `Over by: ${Math.abs(proteinDiff).toFixed(1)} g`;
-
-    document.getElementById("analytics-carbs-remaining").textContent =
-      carbsDiff >= 0
-        ? `Remaining: ${carbsDiff.toFixed(1)} g`
-        : `Over by: ${Math.abs(carbsDiff).toFixed(1)} g`;
-
-    document.getElementById("analytics-fat-remaining").textContent =
-      fatDiff >= 0
-        ? `Remaining: ${fatDiff.toFixed(1)} g`
-        : `Over by: ${Math.abs(fatDiff).toFixed(1)} g`;
+    document.getElementById("analytics-calories-remaining").textContent = caloriesDiff >= 0 ? `Remaining: ${caloriesDiff.toFixed(0)} kcal` : `Over by: ${Math.abs(caloriesDiff).toFixed(0)} kcal`;
+    document.getElementById("analytics-protein-remaining").textContent = proteinDiff >= 0 ? `Remaining: ${proteinDiff.toFixed(1)} g` : `Over by: ${Math.abs(proteinDiff).toFixed(1)} g`;
+    document.getElementById("analytics-carbs-remaining").textContent = carbsDiff >= 0 ? `Remaining: ${carbsDiff.toFixed(1)} g` : `Over by: ${Math.abs(carbsDiff).toFixed(1)} g`;
+    document.getElementById("analytics-fat-remaining").textContent = fatDiff >= 0 ? `Remaining: ${fatDiff.toFixed(1)} g` : `Over by: ${Math.abs(fatDiff).toFixed(1)} g`;
 
     setProgressBar("progress-calories", todayCalories, targetCalories);
     setProgressBar("progress-protein", todayProtein, targetProtein);
     setProgressBar("progress-carbs", todayCarbs, targetCarbs);
     setProgressBar("progress-fat", todayFat, targetFat);
 
-    analyticsDailyDataCache = dailyData;
-    analyticsWeeklyDataCache = weeklyData;
-    analyticsMonthlyDataCache = monthlyData;
-
-    console.log("[DEBUG] Calling renderDailySummary...");
+    // ✅ Render setelah cache & offset sudah benar
     renderDailySummary();
-    
-    console.log("[DEBUG] Calling renderWeeklySummary...");
     renderWeeklySummary();
+    renderMonthlySummary();
 
-    console.log("[DEBUG] Rendering monthly summary...");
-    const recentMonthly = [...monthlyData]
-  .sort((a, b) => String(b.month_key).localeCompare(String(a.month_key)))
-  .slice(0, 6);
-
-    monthlyContainer.innerHTML = recentMonthly.length
-      ? recentMonthly
-          .map(month => `
-            <div class="month-card">
-              <div class="log-card-top">
-                <div>
-                  const label = new Date(month.month_key + "-01")
-  .toLocaleDateString("en-US", {
-    month: "long",
-    year: "numeric"
-  });
-  <div class="log-title">${label}</div>
-                  <div class="log-meta">${month.days_logged || 0} days logged</div>
-                </div>
-                <div class="kcal-badge">${Number(month.avg_daily_calories || 0).toFixed(0)} avg kcal</div>
-              </div>
-
-              <div class="macro-row">
-                <div class="macro-chip">Avg P ${Number(month.avg_daily_protein_g || 0).toFixed(1)} g</div>
-                <div class="macro-chip">Avg C ${Number(month.avg_daily_carbs_g || 0).toFixed(1)} g</div>
-                <div class="macro-chip">Avg F ${Number(month.avg_daily_fat_g || 0).toFixed(1)} g</div>
-              </div>
-            </div>
-          `)
-          .join("")
-      : `<div class="draft-empty">No monthly summary yet.</div>`;
-      
-    console.log("[DEBUG] loadAnalytics completed successfully");
   } catch (error) {
-    console.error("[DEBUG] LOAD ANALYTICS ERROR:", error);
+    console.error("LOAD ANALYTICS ERROR:", error);
     dailyContainer.innerHTML = `<div class="draft-empty">Failed to load daily summary.<br>${error.message}</div>`;
     weeklyContainer.innerHTML = `<div class="draft-empty">Failed to load weekly summary.<br>${error.message}</div>`;
     monthlyContainer.innerHTML = `<div class="draft-empty">Failed to load monthly summary.<br>${error.message}</div>`;
@@ -1172,12 +841,7 @@ document.getElementById("save-btn")?.addEventListener("click", async () => {
   try {
     if (inputMode === "manual") {
       const manualDraft = buildManualDraftFromForm();
-
-      if (!manualDraft) {
-        showToast("Insert at least 1 item before saving.", "error");
-        return;
-      }
-
+      if (!manualDraft) { showToast("Insert at least 1 item before saving.", "error"); return; }
       currentDraft = manualDraft;
       renderDraft();
     } else {
@@ -1186,7 +850,6 @@ document.getElementById("save-btn")?.addEventListener("click", async () => {
         return;
       }
     }
-
     await saveFinal();
   } catch (error) {
     console.error("SAVE BUTTON ERROR:", error);
@@ -1196,76 +859,25 @@ document.getElementById("save-btn")?.addEventListener("click", async () => {
 
 document.getElementById("refresh-logs-btn").addEventListener("click", loadLogs);
 document.getElementById("refresh-analytics-btn").addEventListener("click", loadAnalytics);
-document.getElementById("logs-filter-date").addEventListener("change", () => {
-  logsCurrentPage = 1;
-  loadLogs();
-});
-
+document.getElementById("logs-filter-date").addEventListener("change", () => { logsCurrentPage = 1; loadLogs(); });
 document.getElementById("close-edit-modal").addEventListener("click", closeEditModal);
 document.getElementById("save-edit-btn").addEventListener("click", saveEditedLog);
-
-
-document.getElementById("mode-ai-btn").addEventListener("click", () => {
-  switchInputMode("ai");
-});
-
-document.getElementById("mode-manual-btn").addEventListener("click", () => {
-  switchInputMode("manual");
-  autoPreviewManualEntry();
-});
-document.getElementById("manual-items-container").addEventListener("input", () => {
-  autoPreviewManualEntry();
-});
-
+document.getElementById("mode-ai-btn").addEventListener("click", () => switchInputMode("ai"));
+document.getElementById("mode-manual-btn").addEventListener("click", () => { switchInputMode("manual"); autoPreviewManualEntry(); });
+document.getElementById("manual-items-container").addEventListener("input", () => autoPreviewManualEntry());
 document.getElementById("preview-manual-btn").addEventListener("click", previewManualEntry);
+document.getElementById("user-input")?.addEventListener("keydown", (e) => { if ((e.ctrlKey || e.metaKey) && e.key === "Enter") sendMessage(); });
 
-document.getElementById("user-input")?.addEventListener("keydown", (e) => {
-  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
-    sendMessage();
-  }
-});
+document.getElementById("logs-prev-btn").addEventListener("click", () => { if (logsCurrentPage > 1) { logsCurrentPage--; loadLogs(); } });
+document.getElementById("logs-next-btn").addEventListener("click", () => { logsCurrentPage++; loadLogs(); });
 
-document.getElementById("logs-prev-btn").addEventListener("click", () => {
-  if (logsCurrentPage > 1) {
-    logsCurrentPage--;
-    loadLogs();
-  }
-});
+document.getElementById("daily-prev-btn").addEventListener("click", () => { analyticsDailyOffset++; renderDailySummary(); });
+document.getElementById("daily-next-btn").addEventListener("click", () => { if (analyticsDailyOffset > 0) { analyticsDailyOffset--; renderDailySummary(); } });
 
-document.getElementById("logs-next-btn").addEventListener("click", () => {
-  logsCurrentPage++;
-  loadLogs();
-});
+document.getElementById("weekly-prev-btn").addEventListener("click", () => { analyticsWeeklyOffset++; renderWeeklySummary(); });
+document.getElementById("weekly-next-btn").addEventListener("click", () => { if (analyticsWeeklyOffset > 0) { analyticsWeeklyOffset--; renderWeeklySummary(); } });
 
-document.getElementById("daily-prev-btn").addEventListener("click", () => {
-  analyticsDailyOffset++;
-  renderDailySummary();
-});
-
-document.getElementById("daily-next-btn").addEventListener("click", () => {
-  if (analyticsDailyOffset > 0) {
-    analyticsDailyOffset--;
-    renderDailySummary();
-  }
-});
-
-document.getElementById("weekly-prev-btn").addEventListener("click", () => {
-  analyticsWeeklyOffset++;
-  renderWeeklySummary();
-});
-
-document.getElementById("weekly-next-btn").addEventListener("click", () => {
-  if (analyticsWeeklyOffset > 0) {
-    analyticsWeeklyOffset--;
-    renderWeeklySummary();
-  }
-});
-
-document.getElementById("reset-manual-btn").addEventListener("click", () => {
-  resetManualForm();
-  autoPreviewManualEntry();
-});
-
+document.getElementById("reset-manual-btn").addEventListener("click", () => { resetManualForm(); autoPreviewManualEntry(); });
 document.getElementById("add-manual-item-btn").addEventListener("click", addManualItem);
 
 renderManualItems(1);
@@ -1274,11 +886,7 @@ renderDraft();
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("./sw.js")
-      .then((registration) => {
-        console.log("Service Worker registered:", registration);
-      })
-      .catch((error) => {
-        console.error("Service Worker registration failed:", error);
-      });
+      .then(registration => console.log("Service Worker registered:", registration))
+      .catch(error => console.error("Service Worker registration failed:", error));
   });
 }
