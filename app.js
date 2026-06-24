@@ -385,10 +385,28 @@ function renderWeeklySummary() {
   nextBtn.disabled = analyticsWeeklyOffset === 0;
 }
 
-// ✅ FIX 3: renderMonthlySummary — dipisah jadi fungsi sendiri, JS code tidak nyasar ke template string
+// ✅ FIX 3: renderMonthlySummary — parse month_key manual (no Date constructor) to avoid timezone shift
+function formatMonthLabel(monthKey) {
+  // monthKey format: "2026-06"
+  const parts = String(monthKey || "").split("-");
+  if (parts.length < 2) return monthKey;
+  const year = parseInt(parts[0], 10);
+  const month = parseInt(parts[1], 10) - 1; // 0-indexed
+  const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  return `${monthNames[month] || "?"} ${year}`;
+}
+
 function renderMonthlySummary() {
   const monthlyContainer = document.getElementById("monthly-summary-container");
-  const recentMonthly = [...analyticsMonthlyDataCache]
+
+  // Deduplicate by month_key (take the last occurrence, which should be the most up-to-date)
+  const seen = new Map();
+  analyticsMonthlyDataCache.forEach(month => {
+    const key = String(month.month_key || "");
+    if (key) seen.set(key, month);
+  });
+
+  const recentMonthly = [...seen.values()]
     .sort((a, b) => String(b.month_key).localeCompare(String(a.month_key)))
     .slice(0, 6);
 
@@ -399,8 +417,7 @@ function renderMonthlySummary() {
 
   monthlyContainer.innerHTML = recentMonthly
     .map(month => {
-      const monthLabel = new Date(month.month_key + "-02")
-        .toLocaleDateString("en-US", { month: "long", year: "numeric" });
+      const monthLabel = formatMonthLabel(month.month_key);
       return `
         <div class="month-card">
           <div class="log-card-top">
